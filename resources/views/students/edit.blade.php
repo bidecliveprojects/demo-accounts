@@ -25,7 +25,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12 hidden">
                             <label>Student Section <span class="text-danger">*</span></label>
                             <select name="student_section_type" id="student_section_type" class="form-control" onchange="generateRegistrationNo()">
                                 <option value="1" @if($student->student_section_type == 1) selected @endif>Maktab</option>
@@ -67,7 +67,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12 hidden">
                             <label>Previous Madrasa</label>
                             <input type="text" name="previous_madrasa"
                             class="form-control @error('previous_madrasa') border border-danger @enderror"
