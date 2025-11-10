@@ -32,12 +32,6 @@
     <td>{{CommonHelper::display_document($dRow->father_guardian_cnic)}}</td>
     <td>{{CommonHelper::display_document($dRow->father_guardian_cnic_back)}}</td>
     <td>{{CommonHelper::display_document($dRow->copy_of_last_report)}}</td>
-
-    <td>{{ $dRow->department_name }}</td>
-    <td>{{ $dRow->department_timing }}</td>
-    <td>{{ $dRow->department_fees}}</td>
-    <td>{{ $dRow->concession_fees }}</td>
-    <td>{{CommonHelper::display_document($dRow->consession_fees_image)}}</td>
     <td>{{ $dRow->emp_name }}</td>
     <td>@if($dRow->status == 1) Active @else In-Active @endif</td>
 </tr>

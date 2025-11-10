@@ -74,11 +74,6 @@
                                         <th class="text-center">Father Guardian Cnic Back</th>
                                         <th class="text-center">Copy Of Last Report</th>
 
-                                        <th class="text-center">Department</th>
-                                        <th class="text-center">Class Timing</th>
-                                        <th class="text-center">Fees</th>
-                                        <th class="text-center">Concession Fees</th>
-                                        <th class="text-center">Concession Fees Image</th>
                                         <th class="text-center">Class Teacher Name</th>
                                         <th class="text-center">Status</th>
                                     </tr>
