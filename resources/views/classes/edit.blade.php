@@ -37,6 +37,15 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                            <label>Fee Amount</label>
+                            <input type="text" name="fee_amount"
+                            class="form-control @error('fee_amount') border border-danger @enderror"
+                            id="fee_amount" value="{{$class->fee_amount}}" />
+                            @error('fee_amount')
+                                <div class="text-sm text-danger text-red-600">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                     <div class="lineHeight">&nbsp;</div>
                     <div class="row">

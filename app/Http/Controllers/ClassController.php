@@ -94,7 +94,8 @@ class ClassController extends Controller
     {
         $data = $request->validate([
             'class_name' => 'required|string|max:255',
-            'class_no' => 'required'
+            'class_no' => 'required',
+            'fee_amount' => 'required'
         ]);
 
         $this->classRepository->updateClass($data, $id);

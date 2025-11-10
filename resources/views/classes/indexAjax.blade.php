@@ -6,7 +6,7 @@
         <td class="text-center">{{ $loop->index + 1 }}</td>
         <td class="text-center">{{ $dRow->class_no }}</td>
         <td class="text-center">{{ $dRow->class_name }}</td>
-        <td class="text-center">{{ $dRow->fee_amount }}</td>
+        <td class="text-center">{{ number_format($dRow->fee_amount,0) }}</td>
         <td class="text-center">
             <div class="hidden-print">
                 <label class="switch">

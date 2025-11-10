@@ -6,7 +6,7 @@
 <html>
 
 <head>
-    <title>Demo Accounts Testing</title>
+    <title>Demo Accounts</title>
     <!-- BOOTSTRAP CORE STYLE  -->
     <link href="{{ URL::asset('assets/css/bootstrap.css') }}" rel="stylesheet" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
