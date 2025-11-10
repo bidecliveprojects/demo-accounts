@@ -74,7 +74,6 @@
                                         <th class="text-center">Father Guardian Cnic Back</th>
                                         <th class="text-center">Copy Of Last Report</th>
 
-                                        <th class="text-center">Class Teacher Name</th>
                                         <th class="text-center">Status</th>
                                     </tr>
                                 </thead>
@@ -123,7 +122,6 @@
                     return data ? `<img src="${data}" alt="Copy Of Last Report" style="width:50px; height:50px;" />` :
                         '<img src="assets/img/no_image.png" alt="Default Image" style="width:50px; height:50px;" />';
                 } },
-                { data: 'emp_name', title: 'Class Teacher Name' },
                 { data: 'status', title: 'Status', render: function(data) {
                     return data === 1 ? 'Active' : 'Inactive'; // Example conversion of status code
                 }}
