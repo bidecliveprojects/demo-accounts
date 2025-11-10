@@ -123,14 +123,6 @@
                     return data ? `<img src="${data}" alt="Copy Of Last Report" style="width:50px; height:50px;" />` :
                         '<img src="assets/img/no_image.png" alt="Default Image" style="width:50px; height:50px;" />';
                 } },
-                { data: 'department_name', title: 'Department' },
-                { data: 'class_timing', title: 'Class Timing' },
-                { data: 'fees', title: 'Fees' },
-                { data: 'concession_fees', title: 'Concession Fees' },
-                { data: 'concession_fees_image', title: 'Concession Fees Image', render: function(data) {
-                    return data ? `<img src="${data}" alt="Concession Fee Image" style="width:50px; height:50px;" />` :
-                        '<img src="assets/img/no_image.png" alt="Default Image" style="width:50px; height:50px;" />';
-                }},
                 { data: 'emp_name', title: 'Class Teacher Name' },
                 { data: 'status', title: 'Status', render: function(data) {
                     return data === 1 ? 'Active' : 'Inactive'; // Example conversion of status code
