@@ -85,7 +85,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Reference</label>
                             <input type="text" name="reference"
                             class="form-control @error('reference') border border-danger @enderror"
