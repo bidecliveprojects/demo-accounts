@@ -33,12 +33,12 @@
                             </select>
                             <input type="hidden" name="old_student_section_type" id="old_student_section_type" value="{{$student->student_section_type}}" />
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Registration No</label>
                             <input type="text" name="registration_no" @if(Session::get('registration_no_option') == 1) readonly @endif id="registration_no" value="{{$student->registration_no}}" class="form-control" />
                             <input type="hidden" name="registration_no_option" id="registration_no_option" value="{{ Session::get('registration_no_option') }}" />
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Date of Admission <span class="text-danger">*</span></label>
                             <input type="date" name="date_of_admission"
                             class="form-control @error('date_of_admission') border border-danger @enderror"
@@ -47,7 +47,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Student Name <span class="text-danger">*</span></label>
                             <input type="text" name="student_name"
                             class="form-control @error('student_name') border border-danger @enderror"
@@ -58,7 +58,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Date of Birth <span class="text-danger">*</span></label>
                             <input type="date" name="date_of_birth"
                             class="form-control @error('date_of_birth') border border-danger @enderror"
@@ -67,7 +67,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12 hidden">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 hidden">
                             <label>Previous Madrasa</label>
                             <input type="text" name="previous_madrasa"
                             class="form-control @error('previous_madrasa') border border-danger @enderror"
@@ -76,7 +76,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Grade Class Applied For <span class="text-danger">*</span></label>
                             <input type="text" name="grade_class_applied_for"
                             class="form-control @error('grade_class_applied_for') border border-danger @enderror"
