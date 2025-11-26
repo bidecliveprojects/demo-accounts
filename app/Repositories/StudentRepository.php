@@ -203,6 +203,7 @@ class StudentRepository implements StudentRepositoryInterface
         $student['previous_school'] = $data['previous_school'] ?? '-';
         $student['grade_class_applied_for'] = $data['grade_class_applied_for'];
         $student['reference'] = $data['reference'] ?? '-';
+        $student['class_id'] = $data['class_id'];
         $student['status'] = 1;
         $student['created_by'] = Auth::user()->name;
         $student['created_date'] = date('Y-m-d');

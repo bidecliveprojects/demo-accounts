@@ -77,6 +77,17 @@
                             @enderror
                         </div>
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                            <label>Class</label>
+                            <select name="class_id" id="class_id" class="form-control">
+                                @foreach (CommonHelper::get_all_classes(1) as $row)
+                                    <option value="{{ $row->id }}" @if($student->class_id == $row->id) selected @endif>{{ $row->class_name }}</option>
+                                @endforeach
+                            </select>
+                            @error('class_id')
+                                <div class="text-sm text-danger text-red-600">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 hidden">
                             <label>Grade Class Applied For <span class="text-danger">*</span></label>
                             <input type="text" name="grade_class_applied_for"
                             class="form-control @error('grade_class_applied_for') border border-danger @enderror"
@@ -219,7 +230,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 subHeading">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 subHeading hidden">
                             DOCUMENT REQUIRED WITH REGISTRATION FORM
                         </div>
                     </div>
@@ -270,12 +281,12 @@
                             @enderror
                         </div>
                     </div> --}}
-                    <div class="row">
+                    <div class="row hidden">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 subHeading">
                             MADARSA TIMING AND FEES
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row hidden">
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Student Department <span class="text-danger">*</span></label>
                             <select name="department_id" id="department_id" class="form-control">
