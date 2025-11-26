@@ -189,11 +189,10 @@ class StudentController extends Controller
     public function update(Request $request, $id)
     {
         $data = $request->validate([
-            'section_id' => 'required|integer|exists:sections,id',
             'date_of_admission' => 'required',
             'student_name' => 'required',
             'date_of_birth' => 'required',
-            'grade_class_applied_for' => 'required',
+            'grade_class_applied_for' => '',
             'father_name' => 'required',
             'mother_name' => 'required',
             'father_qualification' => 'required',
