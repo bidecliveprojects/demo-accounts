@@ -35,7 +35,7 @@
                 <div class="col-sm-6 col-sm-offset-3 lineHeight">&nbsp;</div>
                 <div class="col-sm-6 col-sm-offset-3">
                     <label>Description</label>
-                    <input type="text" name="description" id="description" class="form-control" />
+                    <input type="text" name="description" id="description" required class="form-control" />
                 </div>
                 <div class="col-sm-6 col-sm-offset-3">
                     <label>Debit Account</label>
