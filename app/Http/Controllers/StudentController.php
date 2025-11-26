@@ -103,7 +103,8 @@ class StudentController extends Controller
             'reference' => '',
             'mother_qualification' => '',
             'parent_email' => '',
-            'specify_any_health_problem_medication' => ''
+            'specify_any_health_problem_medication' => '',
+            'concession_fees' => ''
         ]);
 
 
@@ -203,6 +204,7 @@ class StudentController extends Controller
             'father_occupation' => 'required',
             'mother_tongue' => 'required',
             'home_address' => 'required',
+            'concession_fees' => '',
             'previous_school' => '',
             'reference' => '',
             'mother_qualification' => '',

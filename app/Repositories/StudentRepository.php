@@ -58,6 +58,7 @@ class StudentRepository implements StudentRepositoryInterface
         $student['grade_class_applied_for'] = '-';
         $student['reference'] = $data['reference'] ?? '-';
         $student['class_id'] = $data['class_id'] ?? 0;
+        $student['concession_fees'] = $data['concession_fees'] ?? 0;
         $student['status'] = 1;
         $student['created_by'] = Auth::user()->name;
         $student['created_date'] = date('Y-m-d');
@@ -203,6 +204,7 @@ class StudentRepository implements StudentRepositoryInterface
         $student['grade_class_applied_for'] = $data['grade_class_applied_for'];
         $student['reference'] = $data['reference'] ?? '-';
         $student['class_id'] = $data['class_id'] ?? 0;
+        $student['concession_fees'] = $data['concession_fees'] ?? 0;
         $student['status'] = 1;
         $student['created_by'] = Auth::user()->name;
         $student['created_date'] = date('Y-m-d');

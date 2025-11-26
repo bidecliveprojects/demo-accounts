@@ -219,12 +219,21 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Specify Any Health Problem Medication</label>
                             <input type="text" name="specify_any_health_problem_medication"
                             class="form-control @error('specify_any_health_problem_medication') border border-danger @enderror"
                             id="specify_any_health_problem_medication" value="{{$student->student_guardian_information->specify_any_health_problem_medication}}" />
                             @error('specify_any_health_problem_medication')
+                                <div class="text-sm text-danger text-red-600">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
+                            <label>Concession Fees <span class="text-danger">*</span></label>
+                            <input type="number" name="concession_fees"
+                            class="form-control @error('concession_fees') border border-danger @enderror"
+                            id="concession_fees" value="{{$student->concession_fees ?? 0}}" />
+                            @error('concession_fees')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
@@ -316,15 +325,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
-                            <label>Concession Fees <span class="text-danger">*</span></label>
-                            <input type="number" name="concession_fees"
-                            class="form-control @error('concession_fees') border border-danger @enderror"
-                            id="concession_fees" value="{{$student->concession_fees ?? 0}}" />
-                            @error('concession_fees')
-                                <div class="text-sm text-danger text-red-600">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        
                         {{-- <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Application for Concession fees</label>
                             <input type="file" name="consession_fees_image"
