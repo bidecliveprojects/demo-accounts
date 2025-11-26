@@ -196,14 +196,13 @@ class StudentRepository implements StudentRepositoryInterface
 
     public function updateStudent($data, $id)
     {
-        $student['section_id'] = $data['section_id'];
         $student['date_of_admission'] = $data['date_of_admission'];
         $student['student_name'] = $data['student_name'];
         $student['date_of_birth'] = $data['date_of_birth'];
         $student['previous_school'] = $data['previous_school'] ?? '-';
         $student['grade_class_applied_for'] = $data['grade_class_applied_for'];
         $student['reference'] = $data['reference'] ?? '-';
-        $student['class_id'] = $data['class_id'];
+        $student['class_id'] = $data['class_id'] ?? 0;
         $student['status'] = 1;
         $student['created_by'] = Auth::user()->name;
         $student['created_date'] = date('Y-m-d');
