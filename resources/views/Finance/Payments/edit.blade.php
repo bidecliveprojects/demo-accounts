@@ -105,7 +105,7 @@
                             <label>Debit Account <span class="text-danger">*</span></label>
                             <select name="debit_account_id" id="debit_account_id" class="form-control @error('debit_account_id') border border-danger @enderror select2">
                                 <option value="">Select Parent Code</option>
-                                @foreach(CommonHelper::get_all_chart_of_account(1) as $row)
+                                @foreach(CommonHelper::get_all_chart_of_account_two(1) as $row)
                                     <option value="{{ $row->id }}" {{ old('debit_account_id', $debitAccountId) == $row->id ? 'selected' : '' }}>{{$row->code}} ---- {{$row->name}}</option>
                                 @endforeach
                             </select>
@@ -117,7 +117,7 @@
                             <label>Credit Account <span class="text-danger">*</span></label>
                             <select name="credit_account_id" id="credit_account_id" class="form-control @error('credit_account_id') border border-danger @enderror select2">
                                 <option value="">Select Parent Code</option>
-                                @foreach(CommonHelper::get_all_chart_of_account(1) as $row)
+                                @foreach(CommonHelper::get_all_chart_of_account_two(1) as $row)
                                     <option value="{{ $row->id }}" {{ old('credit_account_id', $creditAccountId) == $row->id ? 'selected' : '' }}>{{$row->code}} ---- {{$row->name}}</option>
                                 @endforeach
                             </select>

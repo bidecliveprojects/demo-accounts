@@ -2,7 +2,7 @@
     use App\Helpers\CommonHelper;
     $disableSelect = '';
     $hiddenOption = '';
-    $allChartOfAccounts = CommonHelper::get_all_chart_of_account(1);
+    $allChartOfAccounts = CommonHelper::get_all_chart_of_account_two(1);
 @endphp
 @extends('layouts.layouts')
 

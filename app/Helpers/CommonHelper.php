@@ -464,6 +464,26 @@ class CommonHelper
         return DB::select('CALL GetAllChartOfAccounts(?)', [$status]);
     }
 
+    public static function get_all_chart_of_account_two($status = '')
+    {
+        return ChartOfAccount::status($status)
+            ->select('id', 'code', 'name')
+            ->where('company_id', Session::get('company_id'))
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('chart_of_accounts as child')
+                    ->whereColumn('child.parent_code', 'chart_of_accounts.code');
+            })
+            ->orderBy('level1')
+            ->orderBy('level2')
+            ->orderBy('level3')
+            ->orderBy('level4')
+            ->orderBy('level5')
+            ->orderBy('level6')
+            ->orderBy('level7')
+            ->get();
+    }
+
     // public static function get_all_chart_of_account($status = '')
     // {
     //     return ChartOfAccount::status($status)
