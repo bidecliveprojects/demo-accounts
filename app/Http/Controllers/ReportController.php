@@ -266,6 +266,7 @@ class ReportController extends Controller
     public function viewLedgerReport(Request $request)
     {
         if ($request->ajax()) {
+            $ledgerTypeId = $request->input('ledger_type_id');
             $companyId = $request->input('company_id');
             $companyLocationId = $request->input('company_location_id');
             $accId = $request->input('acc_id');
@@ -274,6 +275,7 @@ class ReportController extends Controller
             $accountName = $request->input('account_name');
 
             $filterData = [
+                'ledgerTypeId' => $ledgerTypeId,
                 'accountName' => $accountName,
                 'fromDate' => $fromDate,
                 'toDate' => $toDate
@@ -298,6 +300,9 @@ class ReportController extends Controller
                 )
                 ->where('acc_id', $accId)
                 ->where('v_date', '<', $fromDate)
+                ->when($ledgerTypeId != 1, function ($query) {
+                    $query->where('company_location_id', Session::get('company_location_id'));
+                })
                 ->first();
 
             Log::info(json_encode($makeOpeningBalance));
@@ -331,6 +336,9 @@ class ReportController extends Controller
                     'jv.slip_no as journal_slip_no'
                 )
                 ->where('t.acc_id', $accId)
+                ->when($ledgerTypeId != 1, function ($query) {
+                    $query->where('t.company_location_id', Session::get('company_location_id'));
+                })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
                 ->OrderBy('t.v_date','ASC')
                 ->get();
