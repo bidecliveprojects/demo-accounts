@@ -33,7 +33,6 @@ class ChartOfAccountRepository implements ChartOfAccountRepositoryInterface
             $counter++;
         endforeach;
         $data1['company_id'] = Session::get('company_id');
-        $data1['company_location_id'] = Session::get('company_location_id');
         $data1['code'] = $code;
         $data1['name'] = $data['name'];
         $data1['coa_type'] = 1;
@@ -125,7 +124,6 @@ class ChartOfAccountRepository implements ChartOfAccountRepositoryInterface
             // Build update data
             $updateData = [
                 'company_id' => Session::get('company_id'),
-                'company_location_id' => Session::get('company_location_id'),
                 'code' => $code,
                 'name' => $data['name'],
                 'parent_code' => $data['parent_code'],

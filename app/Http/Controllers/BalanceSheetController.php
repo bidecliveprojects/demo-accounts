@@ -15,7 +15,7 @@ class BalanceSheetController extends Controller
     public function create(){
         $company_id = session('company_id');
         $company_location_id = session('company_location_id');
-        $mainAccountsList = DB::table('chart_of_accounts')->where('parent_code',0)->where('company_id',$company_id)->where('company_location_id',$company_location_id)->where('status',1)->get();
+        $mainAccountsList = DB::table('chart_of_accounts')->where('parent_code',0)->where('company_id',$company_id)->where('status',1)->get();
         return view('balance-sheet-report-settings.create',compact('mainAccountsList'));
     }
 
@@ -61,7 +61,6 @@ class BalanceSheetController extends Controller
                     'created_by' => Auth::user()->name,
                     'created_date' => now()->toDateString(),
                     'company_id' => Session::get('company_id'),
-                    'company_location_id' => Session::get('company_location_id')
                 ]
             );
         }
@@ -75,7 +74,6 @@ class BalanceSheetController extends Controller
                 ->join('chart_of_accounts as coa','bsrs.acc_id','=','coa.id')
                 ->select('bsrs.*','coa.name')
                 ->where('bsrs.company_id',Session::get('company_id'))
-                ->where('bsrs.company_location_id',Session::get('company_location_id'))
                 ->get();
 
             return view('balance-sheet-report-settings.indexAjax', compact('balanceSheetReportSettingsList'));
@@ -87,14 +85,14 @@ class BalanceSheetController extends Controller
     {
         $company_id = session('company_id');
         $company_location_id = session('company_location_id');
-
+        $entryTypeId = $request->input('entry_type_id');
+        
         $from = $request->input('from') ?? Carbon::now()->startOfYear()->toDateString();
         $to = $request->input('to') ?? Carbon::now()->toDateString();
         // Fetch all relevant acc codes (joined with chart_of_accounts)
         $settings = DB::table('balance_sheet_report_settings as bsrs')
             ->join('chart_of_accounts as coa', 'bsrs.acc_id', '=', 'coa.id')
             ->where('bsrs.company_id', $company_id)
-            ->where('bsrs.company_location_id', $company_location_id)
             ->whereIn('bsrs.acc_type', [1, 2, 3])
             ->select('bsrs.*', 'coa.code')
             ->get()
@@ -108,7 +106,6 @@ class BalanceSheetController extends Controller
         $settingsTwo = DB::table('profit_and_loss_report_settings as bsrs')
             ->join('chart_of_accounts as coa', 'bsrs.acc_id', '=', 'coa.id')
             ->where('bsrs.company_id', $company_id)
-            ->where('bsrs.company_location_id', $company_location_id)
             ->whereIn('bsrs.acc_type', [1, 2])
             ->select('bsrs.*', 'coa.code')
             ->get()
@@ -128,6 +125,9 @@ class BalanceSheetController extends Controller
                 DB::raw('SUM(CASE WHEN t.debit_credit = 2 THEN t.amount ELSE 0 END) as total_revenue')
             )
             ->where('t.company_id', $company_id)
+            ->when($entryTypeId != 1, function ($query) use ($company_location_id) {
+                $query->where('t.company_location_id', $company_location_id);
+            })
             ->whereBetween('t.v_date', [$from, $to])
             ->where(function($query) use ($revenueCodes) {
                 foreach ($revenueCodes as $code) {
@@ -148,6 +148,9 @@ class BalanceSheetController extends Controller
                 DB::raw('SUM(CASE WHEN t.debit_credit = 1 THEN t.amount ELSE 0 END) as total_expense')
             )
             ->where('t.company_id', $company_id)
+            ->when($entryTypeId != 1, function ($query) use ($company_location_id) {
+                $query->where('t.company_location_id', $company_location_id);
+            })
             ->whereBetween('t.v_date', [$from, $to])
             ->where(function($query) use ($expenseCodes) {
                 foreach ($expenseCodes as $code) {
@@ -162,14 +165,14 @@ class BalanceSheetController extends Controller
         $totalExpense = $expenses->sum('total_expense');
         $netProfit = $totalRevenue - $totalExpense;
 
-        $assets     = $this->getAccountsWithBalance($company_id, $company_location_id, $assetCodes, $from, $to);
-        $liabilities = $this->getAccountsWithBalance($company_id, $company_location_id, $liabilityCodes, $from, $to);
-        $equities    = $this->getAccountsWithBalance($company_id, $company_location_id, $equityCodes, $from, $to);
+        $assets     = $this->getAccountsWithBalance($company_id, $company_location_id, $entryTypeId, $assetCodes, $from, $to);
+        $liabilities = $this->getAccountsWithBalance($company_id, $company_location_id, $entryTypeId, $liabilityCodes, $from, $to);
+        $equities    = $this->getAccountsWithBalance($company_id, $company_location_id, $entryTypeId, $equityCodes, $from, $to);
 
         return view('reports.balance-sheet.index', compact('assets', 'liabilities', 'equities', 'from', 'to','netProfit'));
     }
 
-    private function getAccountsWithBalance($company_id, $company_location_id, array $level1Ids, $from, $to)
+    private function getAccountsWithBalance($company_id, $company_location_id, $entryTypeId, array $level1Ids, $from, $to)
     {
         return DB::table('chart_of_accounts as coa')
             ->leftJoin('transaction as t', function ($join) use ($from, $to) {
@@ -193,7 +196,9 @@ class BalanceSheetController extends Controller
                 DB::raw("SUM(CASE WHEN t.debit_credit = 2 THEN t.amount ELSE 0 END) as total_credit")
             )
             ->where('coa.company_id', $company_id)
-            ->where('coa.company_location_id', $company_location_id)
+            ->when($entryTypeId != 1, function ($query) use ($company_location_id) {
+                $query->where('t.company_location_id', $company_location_id);
+            })
             ->where('coa.status', 1)
             ->whereIn('coa.level1', $level1Ids)
             ->groupBy('coa.id', 'coa.code', 'coa.name','coa.level1','coa.level2','coa.level2','coa.level3','coa.level4','coa.level5','coa.level6','coa.level7','coa.parent_code')

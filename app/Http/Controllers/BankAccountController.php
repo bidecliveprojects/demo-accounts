@@ -38,21 +38,18 @@ class BankAccountController extends Controller
         }
         $chartOfAccountSettingDetail = DB::table('chart_of_account_settings')
             ->where('option_id', 5)
-            ->where('company_id', Session::get('company_id'))
-            ->where('company_location_id', Session::get('company_location_id'))->first();
+            ->where('company_id', Session::get('company_id'))->first();
         if (empty($chartOfAccountSettingDetail)) {
             $chartOfAccountList = DB::table('chart_of_accounts')
                 ->select('chart_of_accounts.id as acc_id', 'chart_of_accounts.name', 'chart_of_accounts.code')
                 ->where('company_id', Session::get('company_id'))
-                ->where('company_location_id', Session::get('company_location_id'))
                 ->where('status', 1)->get();
         } else {
             $chartOfAccountList = DB::table('chart_of_account_settings as coas')
                 ->join('chart_of_accounts as coa', 'coas.acc_id', '=', 'coa.id')
                 ->select('coas.acc_id', 'coa.name', 'coa.code')
                 ->where('coas.option_id', 3)
-                ->where('coas.company_id', Session::get('company_id'))
-                ->where('coas.company_location_id', Session::get('company_location_id'))->get();
+                ->where('coas.company_id', Session::get('company_id'))->get();
         }
         return view($this->page . 'create', compact('chartOfAccountList'));
     }
@@ -130,7 +127,6 @@ class BankAccountController extends Controller
                 $counter++;
             endforeach;
             $data1['company_id'] = Session::get('company_id');
-            $data1['company_location_id'] = Session::get('company_location_id');
             $data1['code'] = $code;
             $data1['name'] = $validatedData['name'];
             $data1['parent_code'] = $validatedData['acc_id'];

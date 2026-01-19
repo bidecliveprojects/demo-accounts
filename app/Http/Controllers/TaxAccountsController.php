@@ -39,21 +39,18 @@ class TaxAccountsController extends Controller
         }
         $chartOfAccountSettingDetail = DB::table('chart_of_account_settings')
             ->where('option_id', 6)
-            ->where('company_id', Session::get('company_id'))
-            ->where('company_location_id', Session::get('company_location_id'))->first();
+            ->where('company_id', Session::get('company_id'))->first();
         if (empty($chartOfAccountSettingDetail)) {
             $chartOfAccountList = DB::table('chart_of_accounts')
                 ->select('chart_of_accounts.id as acc_id', 'chart_of_accounts.name', 'chart_of_accounts.code')
                 ->where('company_id', Session::get('company_id'))
-                ->where('company_location_id', Session::get('company_location_id'))
                 ->where('status', 1)->get();
         } else {
             $chartOfAccountList = DB::table('chart_of_account_settings as coas')
                 ->join('chart_of_accounts as coa', 'coas.acc_id', '=', 'coa.id')
                 ->select('coas.acc_id', 'coa.name', 'coa.code')
                 ->where('coas.option_id', 6)
-                ->where('coas.company_id', Session::get('company_id'))
-                ->where('coas.company_location_id', Session::get('company_location_id'))->get();
+                ->where('coas.company_id', Session::get('company_id'))->get();
         }
         return view($this->page . 'create', compact('chartOfAccountList'));
     }
@@ -132,7 +129,6 @@ class TaxAccountsController extends Controller
                 $counter++;
             endforeach;
             $data1['company_id'] = Session::get('company_id');
-            $data1['company_location_id'] = Session::get('company_location_id');
             $data1['code'] = $code;
             $data1['name'] = $validatedData['name'];
             $data1['parent_code'] = $validatedData['acc_id'];
@@ -143,7 +139,6 @@ class TaxAccountsController extends Controller
             $data1['operational'] = 2;
             $data1['ledger_type'] = $getAccountDetail->ledger_type;
             $data1['company_id'] = Session::get('company_id');
-            $data1['company_location_id'] = Session::get('company_location_id');
             $accId = DB::table('chart_of_accounts')->insertGetId($data1);
             generate_json('chart_of_accounts');
 
@@ -188,21 +183,18 @@ class TaxAccountsController extends Controller
 
         $chartOfAccountSettingDetail = DB::table('chart_of_account_settings')
             ->where('option_id', 6)
-            ->where('company_id', Session::get('company_id'))
-            ->where('company_location_id', Session::get('company_location_id'))->first();
+            ->where('company_id', Session::get('company_id'))->first();
         if (empty($chartOfAccountSettingDetail)) {
             $chartOfAccountList = DB::table('chart_of_accounts')
                 ->select('chart_of_accounts.id as acc_id', 'chart_of_accounts.name', 'chart_of_accounts.code')
                 ->where('company_id', Session::get('company_id'))
-                ->where('company_location_id', Session::get('company_location_id'))
                 ->where('status', 1)->get();
         } else {
             $chartOfAccountList = DB::table('chart_of_account_settings as coas')
                 ->join('chart_of_accounts as coa', 'coas.acc_id', '=', 'coa.id')
                 ->select('coas.acc_id', 'coa.name', 'coa.code')
                 ->where('coas.option_id', 6)
-                ->where('coas.company_id', Session::get('company_id'))
-                ->where('coas.company_location_id', Session::get('company_location_id'))->get();
+                ->where('coas.company_id', Session::get('company_id'))->get();
         }
 
         $isUsedInTransactions = DB::table('payment_data')->where('acc_id', $taxAccount->acc_id)->exists() ||
@@ -243,7 +235,6 @@ class TaxAccountsController extends Controller
                     $counter++;
                 endforeach;
                 $data1['company_id'] = Session::get('company_id');
-                $data1['company_location_id'] = Session::get('company_location_id');
                 $data1['code'] = $code;
                 $data1['coa_type'] = 2;
                 $data1['name'] = $validatedData['name'];

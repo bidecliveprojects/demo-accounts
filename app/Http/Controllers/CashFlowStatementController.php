@@ -20,7 +20,6 @@ class CashFlowStatementController extends Controller
         // 1. Get cash/bank accounts
         $cashBankAccounts = DB::table('chart_of_account_settings')
             ->where('company_id', $companyId)
-            ->where('company_location_id', $locationId)
             ->whereIn('option_id', [4, 5]) // 4 = Bank, 5 = Cash
             ->where('status', 1)
             ->pluck('acc_id');

@@ -17,6 +17,13 @@
     <div class="lineHeight">&nbsp;</div>
     <form id="list_data" method="get" action="{{ route('reports.viewTrialBalanceReport') }}">
         <div class="row">
+            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                <label>Transaction Type</label>
+                <select name="entry_type_id" id="entry_type_id" class="form-control select2">
+                    <option value="1">All Locations</option>
+                    <option value="2">Individual Location</option>
+                </select>
+            </div>
             <div class="col-lg-3">
                 <input type="hidden" value="{{ Session::get('company_id') }}" id="company_id" name="company_id" />
                 <input type="hidden" value="{{ Session::get('company_location_id') }}" id="company_location_id" name="company_location_id" />

@@ -231,7 +231,6 @@ class SettingController extends Controller
                     ->join('chart_of_accounts as coa','palrs.acc_id','=','coa.id')
                     ->select('palrs.*','coa.name')
                     ->where('palrs.company_id',Session::get('company_id'))
-                    ->where('palrs.company_location_id',Session::get('company_location_id'))
                     ->get();
     
                 return view('profit-and-loss-report-settings.indexAjax', compact('profitAndLossReportSettingsList'));
@@ -272,7 +271,6 @@ class SettingController extends Controller
                     // Check if a record exists
                     $payableAndReceivableReportSetting = PayableAndReceivableReportSetting::where('option_id', $optionId)
                         ->where('company_id',$companyId)
-                        ->where('company_location_id',$companyLocationId)
                         ->first();
 
                     if ($payableAndReceivableReportSetting) {
@@ -310,7 +308,6 @@ class SettingController extends Controller
                     ->join('chart_of_accounts as coa','parrs.acc_id','=','coa.id')
                     ->select('parrs.*','coa.name')
                     ->where('parrs.company_id',Session::get('company_id'))
-                    ->where('parrs.company_location_id',Session::get('company_location_id'))
                     ->get();
     
                 return view('payable-and-receivable-report-settings.indexAjax', compact('payableAndReceivableReportSettingsList'));
@@ -321,7 +318,7 @@ class SettingController extends Controller
         public function profitAndLossReportSettingCreate(){
             $company_id = session('company_id');
             $company_location_id = session('company_location_id');
-            $mainAccountsList = DB::table('chart_of_accounts')->where('parent_code',0)->where('company_id',$company_id)->where('company_location_id',$company_location_id)->where('status',1)->get();
+            $mainAccountsList = DB::table('chart_of_accounts')->where('parent_code',0)->where('company_id',$company_id)->where('status',1)->get();
             return view('profit-and-loss-report-settings.create',compact('mainAccountsList'));
         }
 
@@ -366,8 +363,7 @@ class SettingController extends Controller
                         'acc_type' => $accTypes[$index],
                         'created_by' => Auth::user()->name,
                         'created_date' => now()->toDateString(),
-                        'company_id' => Session::get('company_id'),
-                        'company_location_id' => Session::get('company_location_id')
+                        'company_id' => Session::get('company_id')
                     ]
                 );
             }

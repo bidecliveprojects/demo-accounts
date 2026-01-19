@@ -266,7 +266,7 @@ class ReportController extends Controller
     public function viewLedgerReport(Request $request)
     {
         if ($request->ajax()) {
-            $ledgerTypeId = $request->input('ledger_type_id');
+            $entryTypeId = $request->input('entry_type_id');
             $companyId = $request->input('company_id');
             $companyLocationId = $request->input('company_location_id');
             $accId = $request->input('acc_id');
@@ -275,7 +275,7 @@ class ReportController extends Controller
             $accountName = $request->input('account_name');
 
             $filterData = [
-                'ledgerTypeId' => $ledgerTypeId,
+                'entryTypeId' => $entryTypeId,
                 'accountName' => $accountName,
                 'fromDate' => $fromDate,
                 'toDate' => $toDate
@@ -300,7 +300,7 @@ class ReportController extends Controller
                 )
                 ->where('acc_id', $accId)
                 ->where('v_date', '<', $fromDate)
-                ->when($ledgerTypeId != 1, function ($query) {
+                ->when($entryTypeId != 1, function ($query) {
                     $query->where('company_location_id', Session::get('company_location_id'));
                 })
                 ->first();
@@ -336,7 +336,7 @@ class ReportController extends Controller
                     'jv.slip_no as journal_slip_no'
                 )
                 ->where('t.acc_id', $accId)
-                ->when($ledgerTypeId != 1, function ($query) {
+                ->when($entryTypeId != 1, function ($query) {
                     $query->where('t.company_location_id', Session::get('company_location_id'));
                 })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
@@ -477,6 +477,7 @@ class ReportController extends Controller
     public function viewTrialBalanceReport(Request $request)
     {
         if ($request->ajax()) {
+            $entryTypeId = $request->input('entry_type_id');
             $companyId = $request->input('company_id');
             $companyLocationId = $request->input('company_location_id');
             $fromDate = $request->input('from_date');
@@ -493,6 +494,9 @@ class ReportController extends Controller
                     DB::raw('SUM(CASE WHEN t.debit_credit = 2 THEN t.amount ELSE 0 END) as total_credit')
                 )
                 ->where('t.company_id', $companyId)
+                ->when($entryTypeId != 1, function ($query) {
+                    $query->where('company_location_id', Session::get('company_location_id'));
+                })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
                 ->groupBy('t.acc_id')
                 ->get();
@@ -517,6 +521,7 @@ class ReportController extends Controller
     public function viewProfitLossReport(Request $request)
     {
         if ($request->ajax()) {
+            $entryTypeId = $request->input('entry_type_id');
             $companyId = $request->input('company_id');
             $companyLocationId = $request->input('company_location_id');
             $fromDate = $request->input('from_date');
@@ -526,7 +531,6 @@ class ReportController extends Controller
             $settings = DB::table('profit_and_loss_report_settings as bsrs')
                 ->join('chart_of_accounts as coa', 'bsrs.acc_id', '=', 'coa.id')
                 ->where('bsrs.company_id', $companyId)
-                ->where('bsrs.company_location_id', $companyLocationId)
                 ->whereIn('bsrs.acc_type', [1,2,3,4])
                 ->select('bsrs.*', 'coa.code')
                 ->get()
@@ -547,6 +551,9 @@ class ReportController extends Controller
                     DB::raw('SUM(CASE WHEN t.debit_credit = 2 THEN t.amount ELSE 0 END) as total_revenue')
                 )
                 ->where('t.company_id', $companyId)
+                ->when($entryTypeId != 1, function ($query) use ($companyLocationId) {
+                    $query->where('t.company_location_id', $companyLocationId);
+                })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
                 ->where(function($query) use ($revenueCodes) {
                     foreach ($revenueCodes as $code) {
@@ -565,6 +572,9 @@ class ReportController extends Controller
                     DB::raw('SUM(CASE WHEN t.debit_credit = 1 THEN t.amount ELSE 0 END) as total_expense')
                 )
                 ->where('t.company_id', $companyId)
+                ->when($entryTypeId != 1, function ($query) use ($companyLocationId) {
+                    $query->where('t.company_location_id', $companyLocationId);
+                })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
                 ->where(function($query) use ($expenseCodes) {
                     foreach ($expenseCodes as $code) {
@@ -582,6 +592,9 @@ class ReportController extends Controller
                     DB::raw('SUM(CASE WHEN t.debit_credit = 1 THEN t.amount ELSE 0 END) as total_cogs')
                 )
                 ->where('t.company_id', $companyId)
+                ->when($entryTypeId != 1, function ($query) use ($companyLocationId) {
+                    $query->where('t.company_location_id', $companyLocationId);
+                })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
                 ->where(function($query) use ($costOfGoodSoldCodes) {
                     foreach ($costOfGoodSoldCodes as $code) {
@@ -599,6 +612,9 @@ class ReportController extends Controller
                     DB::raw('SUM(CASE WHEN t.debit_credit = 2 THEN t.amount ELSE 0 END) as total_sale')
                 )
                 ->where('t.company_id', $companyId)
+                ->when($entryTypeId != 1, function ($query) use ($companyLocationId) {
+                    $query->where('t.company_location_id', $companyLocationId);
+                })
                 ->whereBetween('t.v_date', [$fromDate, $toDate])
                 ->where(function($query) use ($salesCodes) {
                     foreach ($salesCodes as $code) {

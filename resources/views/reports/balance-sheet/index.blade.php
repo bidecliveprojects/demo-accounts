@@ -14,6 +14,13 @@
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <form method="GET" action="{{ route('balance-sheet.index') }}" class="mb-4">
                 <div class="row g-3">
+                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                        <label>Transaction Type</label>
+                        <select name="entry_type_id" id="entry_type_id" class="form-control select2">
+                            <option value="1">All Locations</option>
+                            <option value="2">Individual Location</option>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <label>From Date</label>
                         <input type="date" name="from" value="{{ $from }}" class="form-control">

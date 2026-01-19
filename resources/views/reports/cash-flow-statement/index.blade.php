@@ -7,15 +7,22 @@
         <h4>Cash Flow Statement</h4>
         <form method="GET" action="{{ route('reports.cash-flow-statement') }}">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                    <label>Transaction Type</label>
+                    <select name="entry_type_id" id="entry_type_id" class="form-control select2">
+                        <option value="1">All Locations</option>
+                        <option value="2">Individual Location</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                     <label for="from_date">From Date</label>
                     <input type="date" name="from_date" class="form-control" value="{{ request('from_date') }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                     <label for="to_date">To Date</label>
                     <input type="date" name="to_date" class="form-control" value="{{ request('to_date') }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                     <label>&nbsp;</label>
                     <button type="submit" class="btn btn-primary form-control">Filter</button>
                 </div>

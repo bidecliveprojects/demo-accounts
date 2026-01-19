@@ -75,9 +75,7 @@ class ChartOfAccountSettingController extends Controller
             // Filter by company_id and company_location_id
             $chartOfAccountSettings = array_filter($chartOfAccountSettings, function ($chartOfAccountSetting) use ($companyId, $companyLocationId) {
                 return isset($chartOfAccountSetting['company_id']) 
-                    && $chartOfAccountSetting['company_id'] == $companyId
-                    && isset($chartOfAccountSetting['company_location_id']) 
-                    && $chartOfAccountSetting['company_location_id'] == $companyLocationId;
+                    && $chartOfAccountSetting['company_id'] == $companyId;
             });
             // Apply status filter if provided
             if ($status) {
@@ -118,7 +116,6 @@ class ChartOfAccountSettingController extends Controller
                     // Check if a record exists
                     $chartOfAccountSetting = ChartOfAccountSetting::where('option_id', $optionId)
                         ->where('company_id',$companyId)
-                        ->where('company_location_id',$companyLocationId)
                         ->first();
 
                     if ($chartOfAccountSetting) {
