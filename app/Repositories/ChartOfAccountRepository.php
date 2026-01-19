@@ -17,8 +17,6 @@ class ChartOfAccountRepository implements ChartOfAccountRepositoryInterface
         return ChartOfAccount::status($status)->with(['parent' => function ($query) {
             $query->get(['name']);
         },])
-            ->where('company_id', Session::get('company_id'))
-            ->where('company_location_id', Session::get('company_location_id'))
             ->orderBy('code', 'ASC')
             ->get();
     }

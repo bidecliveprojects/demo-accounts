@@ -461,7 +461,7 @@ class CommonHelper
     {
         $companyId = Session::get('company_id');
 
-        return DB::select('CALL GetAllChartOfAccounts(?, ?)', [$status, $companyId]);
+        return DB::select('CALL GetAllChartOfAccounts(?)', [$status]);
     }
 
     // public static function get_all_chart_of_account($status = '')

@@ -258,15 +258,21 @@
             <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
             @elseif(Route::current()->getName() == 'companies.index')
                 <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
-                @elseif(Route::current()->getName() == 'locations.create')
-                    <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
-                    @elseif(Route::current()->getName() == 'locations.index')
-                        <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
-                        @elseif(Session::get('company_id') == '' && Session::get('company_location_id') == '')
-                            <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false"
+            @elseif(Route::current()->getName() == 'locations.create')
+                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
+            @elseif(Route::current()->getName() == 'locations.index')
+                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
+
+            @elseif(Route::current()->getName() == 'chartofaccounts.create')
+                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
+            @elseif(Route::current()->getName() == 'chartofaccounts.index')
+                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
+
+            @elseif(Session::get('company_id') == '' && Session::get('company_location_id') == '')
+                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false"
                                 style="display: block;">
-                            @else
-                                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
+            @else
+                <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
         @endif
         <div class="modal-dialog modalWidth dply">
             <!-- Modal content-->
@@ -278,46 +284,52 @@
                             <h4 class="modal-title">Select The Company</h4>
                         </div>
                         <div class="row">
-                            <div class="row">
-                                <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
-                                    <?php 
-                                                                if ($accType == 'client') {
-                                                            ?>
-                                    <a class="btn btn-xs btn-primary" href="{{ url('companies/create') }}">Add New
-                                        Company</a>
-                                    <a class="btn btn-xs btn-success" href="{{ url('companies') }}">Company List</a>
-                                    <a class="btn btn-xs btn-primary" href="{{ url('locations/create') }}">Add
-                                        Company Location</a>
-                                    <a class="btn btn-xs btn-success" href="{{ url('locations') }}">Company Location
-                                        List</a>
-                                    <?php }else if($accType == 'owner'){?>
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <?php 
+                                                            if ($accType == 'client') {
+                                                        ?>
+                                <a class="btn btn-xs btn-primary" href="{{ url('companies/create') }}">Add New
+                                    Company</a>
+                                <a class="btn btn-xs btn-success" href="{{ url('companies') }}">Company List</a>
+                                <a class="btn btn-xs btn-primary" href="{{ url('locations/create') }}">Add
+                                    Company Location</a>
+                                <a class="btn btn-xs btn-success" href="{{ url('locations') }}">Company Location
+                                    List</a>
+                                <a class="btn btn-xs btn-primary" href="{{ url('finance/chartofaccounts/create') }}">Add
+                                    Chart of Account</a>
+                                <a class="btn btn-xs btn-success" href="{{ url('finance/chartofaccounts') }}">Chart of Account
+                                    List</a>
+                                <?php }else if($accType == 'owner'){?>
 
-                                    <a class="btn btn-xs btn-primary" href="{{ url('locations/create') }}">Add
-                                        Company Location</a>
-                                    <a class="btn btn-xs btn-success" href="{{ url('locations') }}">Company Location
-                                        List</a>
-                                    <?php 
-                                                                } else {
-                                                            ?>
-                                    &nbsp;
-                                    <?php    
-                                                                }
-                                                            ?>
-                                </div>
+                                <a class="btn btn-xs btn-primary" href="{{ url('locations/create') }}">Add
+                                    Company Location</a>
+                                <a class="btn btn-xs btn-success" href="{{ url('locations') }}">Company Location
+                                    List</a>
+                                <a class="btn btn-xs btn-primary" href="{{ url('finance/chartofaccounts/create') }}">Add
+                                    Chart of Account</a>
+                                <a class="btn btn-xs btn-success" href="{{ url('finance/chartofaccounts') }}">Chart of Account
+                                    List</a>
+                                <?php 
+                                                            } else {
+                                                        ?>
+                                &nbsp;
+                                <?php    
+                                                            }
+                                                        ?>
                             </div>
-                            <div class="row">
-                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                    <div id="loadMainSection"></div>
-                                </div>
-                            </div>
-                            <a href="{{ url('/signout') }}" class="btn-b">Sign Out</a>
                         </div>
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div id="loadMainSection"></div>
+                            </div>
+                        </div>
+                        <a href="{{ url('/signout') }}" class="btn-b">Sign Out</a>
                     </div>
-
                 </div>
+
             </div>
         </div>
-        </div>
+    </div>
 
     @endif
     <div class="modal fade" id="showDetailModelOneParamerter">
