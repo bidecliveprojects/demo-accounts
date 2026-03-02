@@ -35,7 +35,7 @@
                     </thead>
                     <tbdoy>
                         <tr>
-                            <th>Father Name</th>
+                            <th>Father Name / Husband Name</th>
                             <td>{{$employeeDetail->emp_father_name}}</td>
                             <th>Date of Birth</th>
                             <td>{{$employeeDetail->date_of_birth}}</td>

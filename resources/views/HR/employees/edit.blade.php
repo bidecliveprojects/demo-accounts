@@ -49,7 +49,7 @@
                             @enderror
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Employee Father Name</label>
+                            <label>Employee Father Name / Husband Name</label>
                             <input type="text" name="emp_father_name"
                             class="form-control @error('emp_father_name') border border-danger @enderror"
                             id="emp_father_name" value="{{$employee->emp_father_name}}" />
