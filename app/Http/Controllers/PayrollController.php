@@ -93,10 +93,25 @@ class PayrollController extends Controller
 
     public function store(Request $request)
     {
+
+        $companyId  = Session::get('company_id');
+        $monthYear  = $request->input('month_year');
+        $empTypeId  = $request->input('filterEmployeeType');
+
+        // Check if payroll already exists for this month and employee type
+        $exists = DB::table('employee_payroll_detail')
+            ->where('company_id', $companyId)
+            ->where('month_year', $monthYear)
+            ->where('employee_type_id', $empTypeId)
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'Payroll for this Month & Employee Type already exists.');
+        }
+
         DB::beginTransaction();
         try {
             $empArray    = $request->input('emp_array');
-            $companyId   = Session::get('company_id');
             $locationId  = Session::get('company_location_id');
             $username    = Auth::user()->name ?? 'system';
             $currentDate = now()->toDateString();
