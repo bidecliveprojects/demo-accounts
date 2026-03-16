@@ -90,5 +90,29 @@
         $(document).ready(function() {
             get_ajax_data();
         });
+        $('body').on('click', '.payroll-delete', function(e) {
+            e.preventDefault();
+            var url = $(this).data('url');
+            if (confirm('Are you sure you want to delete this payroll?')) {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: { _token: "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (typeof data.success != 'undefined') {
+                            alert(data.success);
+                            get_ajax_data();
+                        } else {
+                            alert(data.catchError || data.error || 'An error occurred.');
+                        }
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON && (xhr.responseJSON.catchError || xhr.responseJSON.error) ? xhr.responseJSON.catchError || xhr.responseJSON.error : 'An error occurred.';
+                        alert(msg);
+                    }
+                });
+            }
+        });
     </script>
 @endsection

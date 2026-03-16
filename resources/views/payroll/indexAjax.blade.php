@@ -31,6 +31,8 @@
                 <button class="btn btn-xs dropdown-toggle theme-btn" type="button" data-toggle="dropdown">Action  <span class="caret"></span></button>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('payroll.show', ['id' => $gplRow->id]) }}"><span class="glyphicon glyphicon-eye-open"></span> View</a></li>
+                    <li><a href="{{ route('payroll.edit', $gplRow->id) }}"><span class="glyphicon glyphicon-edit"></span> Edit</a></li>
+                    <li><a href="#" class="payroll-delete" data-url="{{ route('payroll.destroy', $gplRow->id) }}"><span class="glyphicon glyphicon-trash"></span> Delete</a></li>
                 </ul>
             </div>
         </td>

@@ -34,6 +34,9 @@
                             <select name="emp_type" id="emp_type" class="form-control select2">
                                 <option value="1" @if($employee->emp_type == 1) selected @endif>Non Teaching Staff</option>
                                 <option value="2" @if($employee->emp_type == 2) selected @endif>Teaching Staff</option>
+                                <!-- <option value="3" @if($employee->emp_type == 3) selected @endif>Nazim</option>
+                                <option value="4" @if($employee->emp_type == 4) selected @endif>Naib Nazim</option>
+                                <option value="5" @if($employee->emp_type == 5) selected @endif>Moavin</option> -->
                             </select>
                             @error('emp_type')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>

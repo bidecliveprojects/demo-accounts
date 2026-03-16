@@ -117,6 +117,7 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'emp_image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'emp_type' => 'required|in:1,2,3,4,5',
             'emp_name' => '',
             'emp_father_name' => '',
             'date_of_birth' => '',
@@ -280,6 +281,7 @@ class EmployeeController extends Controller
 
         $employeeDetail->company_id = $schoolId;
         $employeeDetail->company_location_id = $schoolCampusId;
+        $employeeDetail->emp_type = $data['emp_type'] ?? 1;
         $employeeDetail->city_id = $data['city_id'];
         $employeeDetail->department_id = $data['department_id'];
         $employeeDetail->emp_name = $data['emp_name'];
@@ -419,7 +421,7 @@ class EmployeeController extends Controller
         // Validate request data
         $data = $request->validate([
             'emp_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'emp_type' => 'required',
+            'emp_type' => 'required|in:1,2,3,4,5',
             'emp_name' => 'required',
             'emp_father_name' => 'required',
             'date_of_birth' => 'required',

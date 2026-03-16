@@ -30,6 +30,7 @@ class PayrollController extends Controller
                 ->leftJoin('employee_allowance_detail as ead', 'e.id', '=', 'ead.employee_id')
                 ->select('e.id','e.emp_no','e.emp_name','e.basic_salary', DB::raw('MAX(ead.id) AS eadId'))
                 ->where('e.emp_type', $filterEmployeeType)
+                ->where('e.status', 1) // Only active employees for payroll
                 ->where('e.company_id',Session::get('company_id'))
                 ->where('e.company_location_id',Session::get('company_location_id'))
                 ->groupBy('e.id','e.emp_no','e.emp_name','e.basic_salary')
@@ -112,6 +113,19 @@ class PayrollController extends Controller
         DB::beginTransaction();
         try {
             $empArray    = $request->input('emp_array');
+            // Only process active employees; skip inactive
+            $activeEmpIds = DB::table('employees')
+                ->where('company_id', $companyId)
+                ->where('company_location_id', Session::get('company_location_id'))
+                ->where('status', 1)
+                ->whereIn('id', $empArray)
+                ->pluck('id')
+                ->toArray();
+            $empArray = $activeEmpIds;
+            if (empty($empArray)) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'No active employees selected. Inactive employees are not included in payroll.');
+            }
             $locationId  = Session::get('company_location_id');
             $username    = Auth::user()->name ?? 'system';
             $currentDate = now()->toDateString();
@@ -319,5 +333,187 @@ class PayrollController extends Controller
             ->where('epd.company_location_id',Session::get('company_location_id'))
             ->get();
         return view('payroll.viewEmployeeSalaryDetail',compact('viewEmployeeSalaryDetail'));
+    }
+
+    public function edit(Request $request, $id)
+    {
+        $epd = DB::table('employee_payroll_detail')
+            ->where('id', $id)
+            ->where('company_id', Session::get('company_id'))
+            ->where('company_location_id', Session::get('company_location_id'))
+            ->first();
+
+        if (!$epd) {
+            return redirect()->route('payroll.index')->with('error', 'Payroll not found.');
+        }
+
+        $normalAllowance = DB::table('allowance_type')->where('type', 1)->where('company_id', Session::get('company_id'))->where('company_location_id', Session::get('company_location_id'))->get();
+        $additionalAllowance = DB::table('allowance_type')->where('type', 2)->where('company_id', Session::get('company_id'))->where('company_location_id', Session::get('company_location_id'))->get();
+        $deductionType = DB::table('deduction_type')->where('company_id', Session::get('company_id'))->where('company_location_id', Session::get('company_location_id'))->get();
+        $chartOfAccountList = DB::table('chart_of_accounts')
+            ->select('chart_of_accounts.id as acc_id', 'chart_of_accounts.name', 'chart_of_accounts.code')
+            ->where('company_id', Session::get('company_id'))
+            ->where('company_location_id', Session::get('company_location_id'))
+            ->where('status', 1)->get();
+
+        $payrollRows = DB::table('employee_payroll_data_detail as epdd')
+            ->join('employees as e', 'epdd.emp_id', '=', 'e.id')
+            ->select('epdd.*', 'e.emp_no', 'e.emp_name')
+            ->where('epdd.epd_id', $id)
+            ->get();
+
+        $allowanceDetails = [];
+        $deductionDetails = [];
+        foreach ($payrollRows as $row) {
+            $allowanceDetails[$row->id] = DB::table('employee_payroll_allowance_detail as epad')
+                ->join('allowance_type as at', 'epad.at_id', '=', 'at.id')
+                ->select('epad.*', 'at.allowance_name', 'at.type as allowance_type')
+                ->where('epad.epdd_id', $row->id)
+                ->where('epad.status', 1)
+                ->get();
+            $deductionDetails[$row->id] = DB::table('employee_payroll_deduction_detail as epdd')
+                ->join('deduction_type as dt', 'epdd.dt_id', '=', 'dt.id')
+                ->select('epdd.*', 'dt.deduction_name')
+                ->where('epdd.epdd_id', $row->id)
+                ->where('epdd.status', 1)
+                ->get();
+        }
+
+        return view('payroll.edit', compact('epd', 'normalAllowance', 'additionalAllowance', 'deductionType', 'chartOfAccountList', 'payrollRows', 'allowanceDetails', 'deductionDetails'));
+    }
+
+    public function update(Request $request)
+    {
+        $epdId = $request->input('epd_id');
+        if (!$epdId) {
+            return redirect()->route('payroll.index')->with('error', 'Invalid payroll.');
+        }
+
+        $epd = DB::table('employee_payroll_detail')
+            ->where('id', $epdId)
+            ->where('company_id', Session::get('company_id'))
+            ->where('company_location_id', Session::get('company_location_id'))
+            ->first();
+
+        if (!$epd) {
+            return redirect()->route('payroll.index')->with('error', 'Payroll not found.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $username = Auth::user()->name ?? 'system';
+            $currentDate = now()->toDateString();
+            $currentTime = now()->format('H:i:s');
+            $empArray = $request->input('emp_array', []);
+            // Only process active employees (same as store)
+            $empArray = DB::table('employees')
+                ->where('company_id', Session::get('company_id'))
+                ->where('company_location_id', Session::get('company_location_id'))
+                ->where('status', 1)
+                ->whereIn('id', $empArray)
+                ->pluck('id')
+                ->toArray();
+
+            foreach ($empArray as $empId) {
+                $epddId = $request->input("epdd_id_{$empId}");
+                if (!$epddId) continue;
+
+                $empBasicSalary = $request->input("emp_basic_salary_{$empId}");
+                $empTotalAllowance = $request->input("emp_total_allowance_{$empId}");
+                $empTotalAdditionalAllowance = $request->input("emp_total_additional_allowance_{$empId}");
+                $empGrossSalary = $request->input("emp_gross_salary_{$empId}");
+                $empTotalDeduction = $request->input("emp_total_deduction_{$empId}");
+                $empNetSalary = $request->input("emp_net_salary_{$empId}");
+
+                DB::table('employee_payroll_data_detail')->where('id', $epddId)->update([
+                    'basic_salary' => $empBasicSalary,
+                    'total_allowance' => $empTotalAllowance,
+                    'total_additional_allowance' => $empTotalAdditionalAllowance,
+                    'gross_salary' => $empGrossSalary,
+                    'total_deduction' => $empTotalDeduction,
+                    'net_salary' => $empNetSalary,
+                ]);
+
+                if (!empty($request->input("emp_normal_allowance_{$empId}"))) {
+                    foreach ($request->input("emp_normal_allowance_{$empId}") as $atId) {
+                        $amount = $request->input("normal_allowance_{$empId}_{$atId}") ?? 0;
+                        DB::table('employee_payroll_allowance_detail')->updateOrInsert(
+                            ['epdd_id' => $epddId, 'at_id' => $atId, 'type' => 1],
+                            ['amount' => $amount, 'status' => 1, 'created_by' => $username, 'created_date' => $currentDate]
+                        );
+                    }
+                }
+                if (!empty($request->input("emp_additional_allowance_{$empId}"))) {
+                    foreach ($request->input("emp_additional_allowance_{$empId}") as $atId) {
+                        $amount = $request->input("additional_allowance_{$empId}_{$atId}") ?? 0;
+                        DB::table('employee_payroll_allowance_detail')->updateOrInsert(
+                            ['epdd_id' => $epddId, 'at_id' => $atId, 'type' => 2],
+                            ['amount' => $amount, 'status' => 1, 'created_by' => $username, 'created_date' => $currentDate]
+                        );
+                    }
+                }
+                if (!empty($request->input("emp_deduction_amount_{$empId}"))) {
+                    foreach ($request->input("emp_deduction_amount_{$empId}") as $dtId) {
+                        $amount = $request->input("deduction_amount_{$empId}_{$dtId}") ?? 0;
+                        DB::table('employee_payroll_deduction_detail')->updateOrInsert(
+                            ['epdd_id' => $epddId, 'dt_id' => $dtId],
+                            ['amount' => $amount, 'status' => 1, 'created_by' => $username, 'created_date' => $currentDate]
+                        );
+                    }
+                }
+
+                $epddRow = DB::table('employee_payroll_data_detail')->where('id', $epddId)->first();
+                if ($epddRow && $epddRow->jv_id) {
+                    DB::table('journal_voucher_data')->where('journal_voucher_id', $epddRow->jv_id)->where('debit_credit', 2)->update(['amount' => $empNetSalary]);
+                    DB::table('journal_voucher_data')->where('journal_voucher_id', $epddRow->jv_id)->where('debit_credit', 1)->update(['amount' => $empNetSalary]);
+                    DB::table('transaction')->where('voucher_id', $epddRow->jv_id)->update(['amount' => $empNetSalary]);
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('payroll.index')->with('message', 'Payroll updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Payroll update failed: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        $epd = DB::table('employee_payroll_detail')
+            ->where('id', $id)
+            ->where('company_id', Session::get('company_id'))
+            ->where('company_location_id', Session::get('company_location_id'))
+            ->first();
+
+        if (!$epd) {
+            return response()->json(['catchError' => 'Payroll not found.'], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $epddIds = DB::table('employee_payroll_data_detail')->where('epd_id', $id)->pluck('id');
+            $jvIds = DB::table('employee_payroll_data_detail')->where('epd_id', $id)->whereNotNull('jv_id')->pluck('jv_id')->unique()->values();
+
+            if ($jvIds->isNotEmpty()) {
+                DB::table('transaction')->whereIn('voucher_id', $jvIds)->delete();
+                DB::table('journal_voucher_data')->whereIn('journal_voucher_id', $jvIds)->delete();
+                DB::table('journal_vouchers')->whereIn('id', $jvIds)->delete();
+            }
+
+            if ($epddIds->isNotEmpty()) {
+                DB::table('employee_payroll_allowance_detail')->whereIn('epdd_id', $epddIds)->delete();
+                DB::table('employee_payroll_deduction_detail')->whereIn('epdd_id', $epddIds)->delete();
+            }
+
+            DB::table('employee_payroll_data_detail')->where('epd_id', $id)->delete();
+            DB::table('employee_payroll_detail')->where('id', $id)->delete();
+
+            DB::commit();
+            return response()->json(['success' => 'Payroll deleted successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['catchError' => 'Delete failed: ' . $e->getMessage()], 500);
+        }
     }
 }

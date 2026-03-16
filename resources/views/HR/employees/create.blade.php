@@ -32,6 +32,19 @@
                             @enderror
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
+                            <label>Employee Type <span class="text-danger">*</span></label>
+                            <select name="emp_type" id="emp_type" class="form-control select2">
+                                <option value="1" {{ old('emp_type', '1') == '1' ? 'selected' : '' }}>Non Teaching Staff</option>
+                                <option value="2" {{ old('emp_type') == '2' ? 'selected' : '' }}>Teaching Staff</option>
+                                <!-- <option value="3" {{ old('emp_type') == '3' ? 'selected' : '' }}>Nazim</option>
+                                <option value="4" {{ old('emp_type') == '4' ? 'selected' : '' }}>Naib Nazim</option>
+                                <option value="5" {{ old('emp_type') == '5' ? 'selected' : '' }}>Moavin</option> -->
+                            </select>
+                            @error('emp_type')
+                                <div class="text-sm text-danger text-red-600">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Employee Name</label>
                             <input type="text" name="emp_name"
                             class="form-control @error('emp_name') border border-danger @enderror"
