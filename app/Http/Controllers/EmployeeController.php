@@ -134,9 +134,9 @@ class EmployeeController extends Controller
             'grace_time' => '',
             'start_time' => '',
             'end_time' => '',
-            'guardian_name' => '',
-            'guardian_mobile_no' => '',
-            'guardian_address' => '',
+            'guardian_name' => 'nullable|string|max:255',
+            'guardian_mobile_no' => 'nullable|string|max:255',
+            'guardian_address' => 'nullable|string|max:500',
             'basic_salary' => '',
             'city_id' => '',
             'department_id' => '',
@@ -301,9 +301,9 @@ class EmployeeController extends Controller
         $employeeDetail->relative_name = $data['relative_name'];
         $employeeDetail->relative_contact_no = $data['relative_contact_no'];
         $employeeDetail->relative_address = $data['relative_address'];
-        $employeeDetail->guardian_name = $data['guardian_name'];
-        $employeeDetail->guardian_mobile_no = $data['guardian_mobile_no'];
-        $employeeDetail->guardian_address = $data['guardian_address'];
+        $employeeDetail->guardian_name = $data['guardian_name'] ?? '';
+        $employeeDetail->guardian_mobile_no = $data['guardian_mobile_no'] ?? '';
+        $employeeDetail->guardian_address = $data['guardian_address'] ?? '';
         $employeeDetail->login_access = $data['login_access'];
         $employeeDetail->grace_time = $data['grace_time'];
         $employeeDetail->start_time = $data['start_time'];
@@ -438,9 +438,9 @@ class EmployeeController extends Controller
             'grace_time' => 'required',
             'start_time' => 'required',
             'end_time' => 'required',
-            'guardian_name' => 'required',
-            'guardian_mobile_no' => 'required',
-            'guardian_address' => 'required',
+            'guardian_name' => 'nullable|string|max:255',
+            'guardian_mobile_no' => 'nullable|string|max:255',
+            'guardian_address' => 'nullable|string|max:500',
             'basic_salary' => 'required',
             'city_id' => 'required',
             'department_id' => 'required',
@@ -452,6 +452,9 @@ class EmployeeController extends Controller
         ]);
 
         $data['emp_type'] = (int) $data['emp_type'];
+        $data['guardian_name'] = trim((string) ($data['guardian_name'] ?? ''));
+        $data['guardian_mobile_no'] = trim((string) ($data['guardian_mobile_no'] ?? ''));
+        $data['guardian_address'] = trim((string) ($data['guardian_address'] ?? ''));
 
         $employee = $this->employeeRepository->findEmployee($id);
         $registrationNo = $employee->emp_no;

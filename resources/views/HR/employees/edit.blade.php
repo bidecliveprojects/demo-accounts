@@ -164,7 +164,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>Employment Status</label>
-                            <select name="employment_status" id="employment_status" class="form-controlselect2">
+                            <select name="employment_status" id="employment_status" class="form-control select2">
                                 <option value="1" @if($employee->employment_status == 1) selected @endif>Permanent</option>
                                 <option value="2" @if($employee->employment_status == 2) selected @endif>Contract Base</option>
                             </select>
@@ -199,28 +199,28 @@
 
 
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Guardian Name</label>
+                            <label>Guardian Name <span class="text-muted">(optional)</span></label>
                             <input type="text" name="guardian_name"
                             class="form-control @error('guardian_name') border border-danger @enderror"
-                            id="guardian_name" value="{{$employee->guardian_name}}" />
+                            id="guardian_name" value="{{ old('guardian_name', $employee->guardian_name) }}" />
                             @error('guardian_name')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Guardian Contact No</label>
+                            <label>Guardian Contact No <span class="text-muted">(optional)</span></label>
                             <input type="text" name="guardian_mobile_no"
                             class="form-control @error('guardian_mobile_no') border border-danger @enderror"
-                            id="guardian_mobile_no" value="{{$employee->guardian_mobile_no}}" />
+                            id="guardian_mobile_no" value="{{ old('guardian_mobile_no', $employee->guardian_mobile_no) }}" placeholder="e.g. 92300-0000000" />
                             @error('guardian_mobile_no')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                            <label>Guardian Address</label>
+                            <label>Guardian Address <span class="text-muted">(optional)</span></label>
                             <input type="text" name="guardian_address"
                             class="form-control @error('guardian_address') border border-danger @enderror"
-                            id="guardian_address" value="{{$employee->guardian_address}}" />
+                            id="guardian_address" value="{{ old('guardian_address', $employee->guardian_address) }}" />
                             @error('guardian_address')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
@@ -511,7 +511,6 @@
             $('#cnic_no').mask('00000-0000000-0');
             $('#phone_no').mask('92300-0000000');
             $('#relative_contact_no').mask('92300-0000000');
-            $('#guardian_mobile_no').mask('92300-0000000');
         });
     </script>
 @endsection

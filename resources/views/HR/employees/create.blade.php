@@ -202,7 +202,7 @@
 
 
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Guardian Name</label>
+                            <label>Guardian Name <span class="text-muted">(optional)</span></label>
                             <input type="text" name="guardian_name"
                             class="form-control @error('guardian_name') border border-danger @enderror"
                             id="guardian_name" value="{{old('guardian_name')}}" />
@@ -211,16 +211,16 @@
                             @enderror
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Guardian Contact No</label>
+                            <label>Guardian Contact No <span class="text-muted">(optional)</span></label>
                             <input type="text" name="guardian_mobile_no"
                             class="form-control @error('guardian_mobile_no') border border-danger @enderror"
-                            id="guardian_mobile_no" value="{{old('guardian_mobile_no')}}" />
+                            id="guardian_mobile_no" value="{{old('guardian_mobile_no')}}" placeholder="e.g. 92300-0000000" />
                             @error('guardian_mobile_no')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                            <label>Guardian Address</label>
+                            <label>Guardian Address <span class="text-muted">(optional)</span></label>
                             <input type="text" name="guardian_address"
                             class="form-control @error('guardian_address') border border-danger @enderror"
                             id="guardian_address" value="{{old('guardian_address')}}" />
@@ -233,8 +233,8 @@
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Marital Status</label>
                             <select name="maritarial_status" id="maritarial_status" class="form-control select2">
-                                <option value="1" {{ old('maritarial_status') == '1' ? 'selected' : '' }}>Married</option>
-                                <option value="2" {{ old('maritarial_status') == '1' ? 'selected' : '' }}>Unmarried</option>
+                                <option value="1" {{ (string) old('maritarial_status', '1') === '1' ? 'selected' : '' }}>Married</option>
+                                <option value="2" {{ (string) old('maritarial_status', '1') === '2' ? 'selected' : '' }}>Unmarried</option>
                             </select>
                             @error('maritarial_status')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
@@ -445,7 +445,6 @@
             $('#cnic_no').mask('00000-0000000-0');
             $('#phone_no').mask('92300-0000000');
             $('#relative_contact_no').mask('92300-0000000');
-            $('#guardian_mobile_no').mask('92300-0000000');
         });
         $(function() {
             $('.multiselect-ui').multiselect({
