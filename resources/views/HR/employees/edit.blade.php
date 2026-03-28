@@ -32,11 +32,15 @@
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Employee Type</label>
                             <select name="emp_type" id="emp_type" class="form-control select2">
-                                <option value="1" @if($employee->emp_type == 1) selected @endif>Non Teaching Staff</option>
-                                <option value="2" @if($employee->emp_type == 2) selected @endif>Teaching Staff</option>
-                                <!-- <option value="3" @if($employee->emp_type == 3) selected @endif>Nazim</option>
-                                <option value="4" @if($employee->emp_type == 4) selected @endif>Naib Nazim</option>
-                                <option value="5" @if($employee->emp_type == 5) selected @endif>Moavin</option> -->
+                                @php
+                                    $currentEmpType = old('emp_type', $employee->emp_type);
+                                    $empTypeVal = in_array((int) $currentEmpType, [1, 2], true) ? (string) (int) $currentEmpType : '';
+                                @endphp
+                                @if($empTypeVal === '')
+                                    <option value="" selected disabled>Select employee type</option>
+                                @endif
+                                <option value="1" @selected($empTypeVal === '1')>Non Teaching Staff</option>
+                                <option value="2" @selected($empTypeVal === '2')>Teaching Staff</option>
                             </select>
                             @error('emp_type')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
@@ -466,6 +470,11 @@
 @section('script')
     <script>
         $('.select2').select2();
+        $('form[action*="employees"]').on('submit', function () {
+            $(this).find('select.select2-hidden-accessible').each(function () {
+                $(this).select2('destroy');
+            });
+        });
         // Add Item
         var counter = {{$employeeExperienceCounter}};
         $('.add_item_btn').click(function() {

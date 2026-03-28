@@ -47,7 +47,7 @@ class EmployeeRepository implements EmployeeRepositoryInterface
 
     public function updateEmployee($data, $id)
     {
-        $employee = Employee::where('id', $id)->update($data);
+        return DB::table('employees')->where('id', $id)->update($data);
     }
 
     public function changeEmployeeStatus($id,$status)

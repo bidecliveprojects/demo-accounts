@@ -117,7 +117,7 @@ class EmployeeController extends Controller
     {
         $data = $request->validate([
             'emp_image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'emp_type' => 'required|in:1,2,3,4,5',
+            'emp_type' => 'required|in:1,2',
             'emp_name' => '',
             'emp_father_name' => '',
             'date_of_birth' => '',
@@ -421,7 +421,7 @@ class EmployeeController extends Controller
         // Validate request data
         $data = $request->validate([
             'emp_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'emp_type' => 'required|in:1,2,3,4,5',
+            'emp_type' => 'required|in:1,2',
             'emp_name' => 'required',
             'emp_father_name' => 'required',
             'date_of_birth' => 'required',
@@ -445,17 +445,16 @@ class EmployeeController extends Controller
             'city_id' => 'required',
             'department_id' => 'required',
             'date_of_joining' => 'required',
-            'employment_status' => '',
+            'job_type' => 'required|in:1,2',
+            'employment_status' => 'nullable|in:1,2',
             'cnic_document.*' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
             'other_document.*' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
         ]);
 
-        // Get registration number and current employee data
-        $schoolId = Session::get('company_id');
-        $schoolCampusId = Session::get('company_location_id');
-        $registrationNo = Employee::RegistrationNo($schoolId, $schoolCampusId);
-        $data['emp_no'] = $registrationNo;
+        $data['emp_type'] = (int) $data['emp_type'];
+
         $employee = $this->employeeRepository->findEmployee($id);
+        $registrationNo = $employee->emp_no;
 
         // Handle employee image upload
         if ($request->hasFile('emp_image')) {
