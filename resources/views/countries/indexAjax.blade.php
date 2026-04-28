@@ -36,6 +36,11 @@
                     @if ($dRow->status == 1)
                         <li><a href="{{ route('countries.edit', $dRow->id) }}">Edit</a></li>
                     @endif
+                    <li>
+                        <a href="#" class="delete-country-record" data-url="{{ route('countries.destroy', $dRow->id) }}">
+                            Delete permanently
+                        </a>
+                    </li>
                 </ul>
             </div>
         </td>

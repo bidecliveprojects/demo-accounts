@@ -39,4 +39,9 @@ class StateRepository implements StateRepositoryInterface
     {
         $state = States::where('id',$id)->update(['status' => $status]);
     }
+
+    public function deleteState($id, $companyId)
+    {
+        return States::where('id', $id)->where('company_id', $companyId)->delete();
+    }
 }

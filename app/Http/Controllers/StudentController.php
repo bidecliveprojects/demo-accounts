@@ -68,7 +68,8 @@ class StudentController extends Controller
      */
     public function create()
     {
-        $roles  = Role::all();
+        $roles = Role::where('company_id', Session::get('company_id'))
+            ->get();
         return view('students.create',compact('roles'));
     }
 

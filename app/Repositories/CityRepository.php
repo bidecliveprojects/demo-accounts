@@ -40,4 +40,9 @@ class CityRepository implements CityRepositoryInterface
     {
         $city = City::where('id',$id)->update(['status' => $status]);
     }
+
+    public function deleteCity($id, $companyId)
+    {
+        return City::where('id', $id)->where('company_id', $companyId)->delete();
+    }
 }

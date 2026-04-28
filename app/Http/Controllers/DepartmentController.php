@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 use App\Repositories\Interfaces\DepartmentRepositoryInterface;
 
@@ -78,6 +78,9 @@ class DepartmentController extends Controller
     public function edit($id)
     {
         $department = $this->departmentRepository->findDepartment($id);
+        if (!$department) {
+            abort(404);
+        }
 
         return view('departments.edit', compact('department'));
     }
@@ -114,5 +117,29 @@ class DepartmentController extends Controller
     public function changeInactiveToActiveRecord($id){
         $this->departmentRepository->changeDepartmentStatus($id,1);
         return response()->json(['success' => 'Active Successfully!']);
+    }
+
+    /**
+     * Permanently delete a department only when no employees/teachers/etc. reference it.
+     */
+    public function destroy($id)
+    {
+        $department = $this->departmentRepository->findDepartment($id);
+
+        if (!$department) {
+            return response()->json([
+                'catchError' => 'Department not found or access denied.',
+            ]);
+        }
+
+        if ($this->departmentRepository->countDepartmentUsage((int) $id) > 0) {
+            return response()->json([
+                'catchError' => 'This department cannot be deleted because it is in use (e.g. employees or teachers).',
+            ]);
+        }
+
+        $department->delete();
+
+        return response()->json(['success' => 'Department deleted successfully.']);
     }
 }

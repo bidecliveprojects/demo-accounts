@@ -8,4 +8,6 @@ Interface DepartmentRepositoryInterface{
     public function findDepartment($id);
     public function updateDepartment($data, $id);
     public function changeDepartmentStatus($id,$status);
+
+    public function countDepartmentUsage(int $departmentId): int;
 }

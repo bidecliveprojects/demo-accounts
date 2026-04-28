@@ -70,5 +70,32 @@
         $(document).ready(function() {
             get_ajax_data();
         });
+
+        $('body').on('click', '.delete-role-record', function (e) {
+            e.preventDefault();
+            var userURL = $(this).data('url');
+            if (!confirm('Delete this role permanently? This cannot be undone.')) {
+                return;
+            }
+            $.ajax({
+                url: userURL,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function (data) {
+                    if (typeof data.success === 'undefined') {
+                        alert(data.catchError || 'Could not delete.');
+                        return;
+                    }
+                    alert(data.success);
+                    get_ajax_data();
+                },
+                error: function () {
+                    alert('Could not delete.');
+                }
+            });
+        });
     </script>
 @endsection

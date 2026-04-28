@@ -36,4 +36,9 @@ class CountryRepository implements CountryRepositoryInterface
     {
         $country = Country::where('id',$id)->update(['status' => $status]);
     }
+
+    public function deleteCountry($id, $companyId)
+    {
+        return Country::where('id', $id)->where('company_id', $companyId)->delete();
+    }
 }

@@ -585,7 +585,10 @@ class CommonHelper
 
     public static function get_all_countries($status = '')
     {
-        return Country::status($status)->select('id', 'country_name')->get();
+        return Country::status($status)
+            ->select('id', 'country_name')
+            ->where('company_id', Session::get('company_id'))
+            ->get();
     }
 
     public static function get_all_paras($status = '')
@@ -610,12 +613,18 @@ class CommonHelper
 
     public static function get_all_states($status = '')
     {
-        return States::status($status)->select('id', 'state_name')->get();
+        return States::status($status)
+            ->select('id', 'state_name')
+            ->where('company_id', Session::get('company_id'))
+            ->get();
     }
 
     public static function get_all_cities($status = '')
     {
-        return City::status($status)->select('id', 'city_name')->get();
+        return City::status($status)
+            ->select('id', 'city_name')
+            ->where('company_id', Session::get('company_id'))
+            ->get();
     }
 
     public static function display_document($document)

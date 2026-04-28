@@ -25,6 +25,11 @@
                     <li>
                         <a href="{{ route('roles.edit', ['id' => $role->id]) }}">Edit</a>
                     </li>
+                    <li>
+                        <a href="#" class="delete-role-record" data-url="{{ route('roles.destroy', $role->id) }}">
+                            Delete permanently
+                        </a>
+                    </li>
                 </ul>
             </div>
         </td>

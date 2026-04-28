@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\CountryRequest;
 
 use App\Repositories\Interfaces\CountryRepositoryInterface;
+use App\Services\MasterDataDeletionGuard;
+use Illuminate\Support\Facades\Session;
 
 class CountryController extends Controller
 {
@@ -110,5 +112,24 @@ class CountryController extends Controller
     public function changeInactiveToActiveRecord($id){
         $this->countryRepository->changeCountryStatus($id,1);
         return response()->json(['success' => 'Active Successfully!']);
+    }
+
+    /**
+     * Permanent delete (only when no states reference this country for this company).
+     */
+    public function destroy($id)
+    {
+        $companyId = (int) Session::get('company_id');
+        $check = MasterDataDeletionGuard::assertCountryDeletable((int) $id, $companyId);
+        if (! $check['ok']) {
+            return response()->json([
+                'catchError' => $check['message'],
+            ]);
+        }
+
+        $this->countryRepository->deleteCountry($id, $companyId);
+        generate_json('countries');
+
+        return response()->json(['success' => 'Country deleted permanently.']);
     }
 }

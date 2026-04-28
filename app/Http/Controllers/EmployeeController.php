@@ -37,7 +37,9 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        $departments = Department::where('company_id', Session::get('company_id'))->get();
+        $departments = Department::where('company_id', Session::get('company_id'))
+            ->where('company_location_id', Session::get('company_location_id'))
+            ->get();
         if ($request->ajax()) {
             $employees =  $this->employeeRepository->allEmployees($request->all());
             return DataTables::of($employees)
@@ -101,7 +103,7 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $roles  = Role::all();
+        $roles  = Role::where('company_id', Session::get('company_id'))->get();
         $cities = DB::table('cities')->get();
         $departments = Department::status(1)->where('company_id', Session::get('company_id'))->where('company_location_id', Session::get('company_location_id'))->get();
         return view($this->page . 'create', compact('roles', 'cities', 'departments'));
@@ -382,8 +384,10 @@ class EmployeeController extends Controller
     {
         $employee = $this->employeeRepository->findEmployee($id);
         $cities = DB::table('cities')->get();
-        $departments = Department::status(1)->where('company_id', Session::get('company_id'))->get();
-        $roles  = Role::all();
+        $departments = Department::status(1)->where('company_id', Session::get('company_id'))
+            ->where('company_location_id', Session::get('company_location_id'))
+            ->get();
+        $roles  = Role::where('company_id', Session::get('company_id'))->get();
         $employeeEducationDetails = DB::table('employee_education_details')->where('employee_id', $id)->first();
         $employeeExperiences = DB::table('employee_experiences')->where('employee_id', $id)->get();
         $normalAllowance = DB::table('allowance_type as atype')

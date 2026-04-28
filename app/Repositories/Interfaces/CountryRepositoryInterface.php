@@ -8,4 +8,5 @@ Interface CountryRepositoryInterface{
     public function findCountry($id);
     public function updateCountry($data, $id);
     public function changeCountryStatus($id,$status);
+    public function deleteCountry($id, $companyId);
 }

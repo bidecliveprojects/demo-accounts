@@ -8,4 +8,5 @@ Interface CityRepositoryInterface{
     public function findCity($id);
     public function updateCity($data, $id);
     public function changeCityStatus($id,$status);
+    public function deleteCity($id, $companyId);
 }

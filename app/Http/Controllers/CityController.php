@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\City;
 use Illuminate\Http\Request;
 use App\Repositories\Interfaces\CityRepositoryInterface;
+use App\Services\MasterDataDeletionGuard;
+use Illuminate\Support\Facades\Session;
 
 class CityController extends Controller
 {
@@ -112,5 +114,24 @@ class CityController extends Controller
     public function changeInactiveToActiveRecord($id){
         $this->cityRepository->changeCityStatus($id,1);
         return response()->json(['success' => 'Active Successfully!']);
+    }
+
+    /**
+     * Permanent delete (only when city is not used by employees, CRM, or student guardian records for this company).
+     */
+    public function destroy($id)
+    {
+        $companyId = (int) Session::get('company_id');
+        $check = MasterDataDeletionGuard::assertCityDeletable((int) $id, $companyId);
+        if (! $check['ok']) {
+            return response()->json([
+                'catchError' => $check['message'],
+            ]);
+        }
+
+        $this->cityRepository->deleteCity($id, $companyId);
+        generate_json('cities');
+
+        return response()->json(['success' => 'City deleted permanently.']);
     }
 }

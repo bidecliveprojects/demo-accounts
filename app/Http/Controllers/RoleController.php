@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\CommonHelper;
+use App\Services\MasterDataDeletionGuard;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -138,5 +139,31 @@ class RoleController extends Controller
                 'data' => null,
             ], 500);
         }
+    }
+
+    /**
+     * Permanent delete (only when no user has this role; see MasterDataDeletionGuard::assertRoleDeletable).
+     */
+    public function destroy($id)
+    {
+        $companyId = (int) Session::get('company_id');
+        $check = MasterDataDeletionGuard::assertRoleDeletable((int) $id, $companyId);
+        if (! $check['ok']) {
+            return response()->json([
+                'catchError' => $check['message'],
+            ]);
+        }
+
+        $role = Role::where('id', $id)->where('company_id', $companyId)->first();
+        if (is_null($role)) {
+            return response()->json([
+                'catchError' => 'Role not found.',
+            ]);
+        }
+
+        $role->syncPermissions([]);
+        $role->delete();
+
+        return response()->json(['success' => 'Role deleted permanently.']);
     }
 }

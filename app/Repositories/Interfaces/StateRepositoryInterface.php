@@ -8,4 +8,5 @@ Interface StateRepositoryInterface{
     public function findState($id);
     public function updateState($data, $id);
     public function changeStateStatus($id,$status);
+    public function deleteState($id, $companyId);
 }

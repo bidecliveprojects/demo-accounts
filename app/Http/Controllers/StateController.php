@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\State;
 use Illuminate\Http\Request;
 use App\Repositories\Interfaces\StateRepositoryInterface;
+use App\Services\MasterDataDeletionGuard;
+use Illuminate\Support\Facades\Session;
 
 class StateController extends Controller
 {
@@ -114,5 +115,24 @@ class StateController extends Controller
     public function changeInactiveToActiveRecord($id){
         $this->stateRepository->changeStateStatus($id,1);
         return response()->json(['success' => 'Active Successfully!']);
+    }
+
+    /**
+     * Permanent delete (only when no cities reference this state for this company).
+     */
+    public function destroy($id)
+    {
+        $companyId = (int) Session::get('company_id');
+        $check = MasterDataDeletionGuard::assertStateDeletable((int) $id, $companyId);
+        if (! $check['ok']) {
+            return response()->json([
+                'catchError' => $check['message'],
+            ]);
+        }
+
+        $this->stateRepository->deleteState($id, $companyId);
+        generate_json('states');
+
+        return response()->json(['success' => 'State deleted permanently.']);
     }
 }
