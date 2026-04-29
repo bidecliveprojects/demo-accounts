@@ -206,25 +206,38 @@ class CompanyController extends Controller
         }else{
             $companiesList = DB::Connection('mysql')->table('companies')->select(['name','id','dbName','company_code','registration_no'])->where('status','=','1')->where('id', $filterSchoolMainScreenId)->get();
         }
-        $data = '<ul class="ban-list">';
-        foreach ($companiesList as $cRow1) {
-            // Sanitize and encode URL parameters
-            $companyId = urlencode($cRow1->id);
-            $companyName = urlencode($cRow1->name);
-            $companyCode = urlencode($cRow1->company_code);
-            $url = url("set_user_db_id?company_id={$companyId}&company_name={$companyName}&company_code={$companyCode}");
+        $h = static function ($v) {
+            return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        };
 
-            // Append list item
-            $data .= '<li><div class="banq-box">';
-            $data .= '<a onclick="loadLocations('.$companyId.')">';
-            $data .= '<span class="companyLetr theme-bg theme-f-m">' .substr($cRow1->name, 0, 1). '</span>';
-            $data .= '<h3 class="item-model-company theme-f-m">' .$cRow1->name . '</h3>';
-            $data .= '<h3 class="item-model-company theme-f-m">' .$cRow1->registration_no . '</h3>';
-            $data .= '</a></div></li>';
+        $cards = '';
+        foreach ($companiesList as $cRow1) {
+            $companyId = (int) $cRow1->id;
+            $letter = function_exists('mb_substr')
+                ? mb_substr((string) $cRow1->name, 0, 1)
+                : substr((string) $cRow1->name, 0, 1);
+            $cards .= '<a href="#" class="company-picker-card company-picker-card--company" role="button" onclick="loadLocations('.$companyId.'); return false;">';
+            $cards .= '<span class="company-picker-avatar theme-bg theme-f-m">'.$h($letter).'</span>';
+            $cards .= '<div class="company-picker-card-body">';
+            $cards .= '<span class="company-picker-name">'.$h($cRow1->name).'</span>';
+            $cards .= '<span class="company-picker-meta"><span class="company-picker-meta-label">Reg.</span> '.$h($cRow1->registration_no).'</span>';
+            $cards .= '</div>';
+            $cards .= '<span class="company-picker-chevron" aria-hidden="true"><i class="fa fa-chevron-right"></i></span>';
+            $cards .= '</a>';
         }
-        $data .= '</ul>';
-        echo $data;
-        
+
+        $empty = $companiesList->isEmpty()
+            ? '<div class="company-picker-empty"><i class="fa fa-info-circle" aria-hidden="true"></i> No active companies available.</div>'
+            : '';
+
+        $html = '<div class="company-picker" data-step="company">';
+        $html .= '<div class="company-picker-stepbar" role="status"><span class="company-picker-step company-picker-step--active"><span class="company-picker-step-num">1</span> Company</span><span class="company-picker-stepsep" aria-hidden="true"></span><span class="company-picker-step"><span class="company-picker-step-num">2</span> Location</span></div>';
+        $html .= '<h5 class="company-picker-heading">Choose company</h5>';
+        $html .= '<p class="company-picker-lead text-muted">Select an organization. You will choose a campus or location on the next step.</p>';
+        $html .= '<div class="company-picker-grid">'.$cards.'</div>'.$empty;
+        $html .= '</div>';
+
+        return response($html);
     }
 
     public function loadLocations(Request $request)
@@ -267,9 +280,12 @@ class CompanyController extends Controller
                 ->get();
         }
 
-        $data = '<ul class="ban-list">';
+        $h = static function ($v) {
+            return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        };
+
+        $cards = '';
         foreach ($locationsList as $lRow1) {
-            // Sanitize and encode URL parameters
             $schoolId = urlencode($lRow1->company_id);
             $companyName = urlencode($lRow1->company_name);
             $companyCode = urlencode($lRow1->company_code);
@@ -277,16 +293,35 @@ class CompanyController extends Controller
             $schoolCampusId = urlencode($lRow1->id);
             $url = url("set_user_db_id?company_id={$schoolId}&company_name={$companyName}&company_code={$companyCode}&company_location_id={$schoolCampusId}&company_location_name={$campusName}");
 
-            // Append list item
-            $data .= '<li><div class="banq-box">';
-            $data .= '<a href="'.$url.'">';
-            $data .= '<span class="companyLetr theme-bg theme-f-m">' .substr($lRow1->name, 0, 1). '</span>';
-            $data .= '<h3 class="item-model-company theme-f-m">' .$lRow1->name . '</h3>';
-            $data .= '</a></div></li>';
+            $letter = function_exists('mb_substr')
+                ? mb_substr((string) $lRow1->name, 0, 1)
+                : substr((string) $lRow1->name, 0, 1);
+
+            $cards .= '<a href="'.$url.'" class="company-picker-card company-picker-card--location">';
+            $cards .= '<span class="company-picker-avatar theme-bg theme-f-m">'.$h($letter).'</span>';
+            $cards .= '<div class="company-picker-card-body">';
+            $cards .= '<span class="company-picker-name">'.$h($lRow1->name).'</span>';
+            $cards .= '<span class="company-picker-meta company-picker-meta--enter"><i class="fa fa-sign-in" aria-hidden="true"></i> Open workspace</span>';
+            $cards .= '</div>';
+            $cards .= '<span class="company-picker-chevron" aria-hidden="true"><i class="fa fa-chevron-right"></i></span>';
+            $cards .= '</a>';
         }
-        $data .= '</ul>';
-        echo $data;
-        
+
+        $empty = $locationsList->isEmpty()
+            ? '<div class="company-picker-empty"><i class="fa fa-info-circle" aria-hidden="true"></i> No locations found for this company.</div>'
+            : '';
+
+        $html = '<div class="company-picker" data-step="location">';
+        $html .= '<div class="company-picker-toolbar">';
+        $html .= '<button type="button" class="btn btn-default btn-sm company-picker-back" onclick="loadCompanies(); return false;"><i class="fa fa-arrow-left" aria-hidden="true"></i> Change company</button>';
+        $html .= '</div>';
+        $html .= '<div class="company-picker-stepbar" role="status"><span class="company-picker-step company-picker-step--done"><span class="company-picker-step-num"><i class="fa fa-check"></i></span> Company</span><span class="company-picker-stepsep" aria-hidden="true"></span><span class="company-picker-step company-picker-step--active"><span class="company-picker-step-num">2</span> Location</span></div>';
+        $html .= '<h5 class="company-picker-heading">Choose location</h5>';
+        $html .= '<p class="company-picker-lead text-muted">Select the campus or branch to load your data and continue.</p>';
+        $html .= '<div class="company-picker-grid">'.$cards.'</div>'.$empty;
+        $html .= '</div>';
+
+        return response($html);
     }
 
     public function loadSchoolCampusDetailDependCampusIds(Request $request){

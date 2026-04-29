@@ -6,73 +6,71 @@
 @extends('layouts.layouts')
 @section('content')
 <div class="well_N">
-	<div class="boking-wrp dp_sdw">
-	    <div class="row">
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                {{CommonHelper::displayPageTitle('View Receipt Voucher List')}}
+	<div class="boking-wrp dp_sdw finance-page-card">
+	    <div class="row finance-page-head">
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                {{ CommonHelper::displayPageTitle('View Receipt Voucher List') }}
+                <p class="finance-page-lead text-muted hidden-xs">Filter by type, status, and date range.</p>
             </div>
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right">
-                <a href="{{ route('receipts.create') }}" class="btn btn-success btn-xs"><span></span> Create New</a>
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 text-right finance-page-actions">
+                <a href="{{ route('receipts.create') }}" class="btn btn-success btn-sm"><i class="fa fa-plus" aria-hidden="true"></i> New receipt</a>
             </div>
         </div>
-        <form id="list_data" method="get" action="{{ route('receipts.index') }}">
-            <div class="row">
-                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                    <label>Voucher Type</label>
-                    <select name="filterVoucherType" id="filterVoucherType" class="form-control">
-                        <option value="">All Vouchers</option>
+        <form id="list_data" method="get" action="{{ route('receipts.index') }}" class="finance-filter-form">
+            <div class="row filter-toolbar-actions finance-filter-row">
+                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                    <label for="filterVoucherType">Voucher type</label>
+                    <select name="filterVoucherType" id="filterVoucherType" class="form-control select2">
+                        <option value="">All vouchers</option>
                         <option value="1">Cash</option>
                         <option value="2">Bank</option>
                     </select>
                 </div>
-                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                    <label>Status</label>
-                    <select name="filterStatus" id="filterStatus" class="form-control">
-                        <option value="">All Status</option>
+                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                    <label for="filterStatus">Status</label>
+                    <select name="filterStatus" id="filterStatus" class="form-control select2">
+                        <option value="">All statuses</option>
                         <option value="1">Active</option>
-                        <option value="2">InActive</option>
+                        <option value="2">Inactive</option>
                     </select>
                 </div>
-                <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
-                    <label>From Date</label>
-                    <input type="date" name="from_date" id="from_date" value="{{$fromDate}}" class="form-control" />
+                <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+                    <label for="from_date">From date</label>
+                    <input type="date" name="from_date" id="from_date" value="{{ $fromDate }}" class="form-control" />
                 </div>
-                <div class="col-lg-1 col-md-1 col-sm-1 col-xs-12">
-                    <label>&nbsp;</label>
-                    <input type="text" class="form-control text-center" readonly value="Between" />
+                <div class="col-lg-1 col-md-1 col-sm-6 col-xs-12 finance-between-wrap">
+                    <label class="finance-between-label">Range</label>
+                    <div class="finance-between-badge" title="Date range">↔</div>
                 </div>
-                <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
-                    <label>To Date</label>
-                    <input type="date" name="to_date" id="to_date" value="{{$toDate}}" class="form-control" />
+                <div class="col-lg-2 col-md-2 col-sm-6 col-xs-12">
+                    <label for="to_date">To date</label>
+                    <input type="date" name="to_date" id="to_date" value="{{ $toDate }}" class="form-control" />
                 </div>
-                <div class="col-lg-1 col-md-1 col-sm-1 col-xs-12" style="padding: 30px;">
-                    <input type="button" value="Filter" onclick="get_ajax_data()" class="btn btn-xs btn-success" />
+                <div class="col-lg-1 col-md-1 col-sm-12 col-xs-12 finance-filter-submit-wrap">
+                    <button type="button" onclick="get_ajax_data()" class="btn btn-primary btn-sm btn-block"><i class="fa fa-filter" aria-hidden="true"></i> Apply</button>
                 </div>
             </div>
         </form>
-        <div class="lineHeight">&nbsp;</div>
-        <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-condensed">
-                        <thead>
-                            <tr>
-                                <th class="text-center">S.No</th>
-                                <th class="text-center">R.V.No.</th>
-                                <th class="text-center">R.V.Date</th>
-                                <th class="text-center">Voucher Type</th>
-                                <th class="text-center">Cheque No</th>
-                                <th class="text-center">Cheque Date</th>
-                                <th class="text-center">Description</th>
-                                <th class="text-center">Account Detail</th>
-                                <th class="text-center">Created Detail</th>
-                                <th class="text-center">Voucher Status</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="data"></tbody>
-                    </table>
-                </div>
+        <div class="finance-table-wrap">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-condensed table-hover finance-data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">S.No</th>
+                            <th class="text-center">R.V.No.</th>
+                            <th class="text-center">R.V.Date</th>
+                            <th class="text-center">Voucher Type</th>
+                            <th class="text-center">Cheque No</th>
+                            <th class="text-center">Cheque Date</th>
+                            <th class="text-center">Description</th>
+                            <th class="text-center">Account Detail</th>
+                            <th class="text-center">Created Detail</th>
+                            <th class="text-center">Voucher Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -81,6 +79,9 @@
 @section('script')
     <script>
         $(document).ready(function() {
+            if ($.fn.select2) {
+                $('#filterVoucherType, #filterStatus').select2({ width: '100%' });
+            }
             get_ajax_data();
         });
     </script>

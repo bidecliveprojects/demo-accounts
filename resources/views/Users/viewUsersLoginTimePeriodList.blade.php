@@ -2,15 +2,13 @@
 use App\Helpers\CommonHelper;
 $accType = auth()->user()?->acc_type ?? '';
 $m = Session::get('company_id');
-//$accountYearDates = DB::Connection('mysql')->table('accountyear')->select('AccountYearStartDate','AccountYearEndDate')->where('status','=','1')->where('AccountYearId','=',Session::get('accountYear'))->first();
 $current_date = date('Y-m-d');
 $currentMonthStartDate = date('Y-m-01');
 $currentMonthEndDate   = date('Y-m-t');
 ?>
 
 @extends('layouts.layouts')
-@section('content')
-<!DOCTYPE html>
+@section('custom-css-end')
 <style>
 .switch {
   position: relative;
@@ -18,13 +16,11 @@ $currentMonthEndDate   = date('Y-m-t');
   width: 60px;
   height: 34px;
 }
-
-.switch input { 
+.switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
 .slider {
   position: absolute;
   cursor: pointer;
@@ -36,7 +32,6 @@ $currentMonthEndDate   = date('Y-m-t');
   -webkit-transition: .4s;
   transition: .4s;
 }
-
 .slider:before {
   position: absolute;
   content: "";
@@ -48,86 +43,80 @@ $currentMonthEndDate   = date('Y-m-t');
   -webkit-transition: .4s;
   transition: .4s;
 }
-
 input:checked + .slider {
   background-color: #2196F3;
 }
-
 input:focus + .slider {
   box-shadow: 0 0 1px #2196F3;
 }
-
 input:checked + .slider:before {
   -webkit-transform: translateX(26px);
   -ms-transform: translateX(26px);
   transform: translateX(26px);
 }
-
-/* Rounded sliders */
 .slider.round {
   border-radius: 34px;
 }
-
 .slider.round:before {
   border-radius: 50%;
 }
 </style>
+@endsection
+
+@section('content')
 <div class="well_N">
-	<div class="row">
-		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-			<?php echo CommonHelper::displayPrintButtonInBlade('PrintUsersLoginTimePeriodAndRolePermissionList','','1');?>
-			<button id="csv" onclick="generateCSVFile('usersLoginTimePeriodAndRolePermission','View Users List')" class="btn btn-sm btn-warning">TO CSV</button>
-            <button id="pdf" onclick="generatePDFFile('usersLoginTimePeriodAndRolePermission','View Users List')" class="btn btn-sm btn-success">TO PDF</button>
-		</div>
-	</div>
-	<div class="lineHeight">&nbsp;</div>
-	<div class="boking-wrp dp_sdw">
-		<div class="row" id="PrintUsersLoginTimePeriodAndRolePermissionList">
+    <div class="boking-wrp dp_sdw hr-page-card" id="PrintUsersLoginTimePeriodAndRolePermissionList">
+        <div class="row hr-page-head hidden-print">
+            <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                {{ CommonHelper::displayPageTitle('View users list') }}
+                <p class="hr-page-lead text-muted hidden-xs">Company users, roles, and status. Use actions to edit, assign roles, or activate/deactivate.</p>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 text-right hr-page-actions">
+                <div class="hr-export-group btn-group" role="group" aria-label="Export">
+                    {!! CommonHelper::displayPrintButtonInBlade('PrintUsersLoginTimePeriodAndRolePermissionList', '', '1') !!}
+                    <button type="button" id="csv" onclick="generateCSVFile('usersLoginTimePeriodAndRolePermission','View Users List')" class="btn btn-default btn-sm"><i class="fa fa-file-excel-o" aria-hidden="true"></i> CSV</button>
+                    <button type="button" id="pdf" onclick="generatePDFFile('usersLoginTimePeriodAndRolePermission','View Users List')" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 hidden-print">
-                                {{CommonHelper::displayPageTitle('View Users List')}}
-                            </div>
-                        </div>
+                <div class="hr-table-wrap">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover customTableTwo hr-data-table" id="usersLoginTimePeriodAndRolePermission">
+                            {{ CommonHelper::displayPDFTableHeader('1000','View Users List') }}
+                            <thead>
+                                <tr>
+                                    <th class="text-center">S.No</th>
+                                    <th class="text-center">Assign Company Name</th>
+                                    <th class="text-center">Name</th>
+                                    <th class="text-center">Username</th>
+                                    <th class="text-center">Email</th>
+                                    <th class="text-center">Mobile</th>
+                                    <th class="text-center">Account type</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Roles</th>
+                                    <th class="text-center hidden-print">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="filterUsersLoginTimePeriodAndRolePermissionList">
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="card-body">
-						<div class="table-responsive wrapper">
-							<table class="table table-bordered customTableTwo" id="usersLoginTimePeriodAndRolePermission">
-								{{CommonHelper::displayPDFTableHeader('1000','View Users List')}}
-								<thead>
-									<tr>
-										<th class="text-center">S.No</th>
-										<th class="text-center">Assign Company Name</th>
-										<th class="text-center">Name</th>
-										<th class="text-center">Username</th>
-										<th class="text-center">Email</th>
-										<th class="text-center">Mobile</th>
-										<th class="text-center">Account type</th>
-										<th class="text-center">Status</th>
-										<th class="text-center">Roles</th>
-										<th class="text-center hidden-print">Action</th>
-									</tr>
-								</thead>
-								<tbody id="filterUsersLoginTimePeriodAndRolePermissionList">
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-    
-    <script src="{{ URL::asset('assets/custom/js/customHrFunction.js') }}"></script>
-    <script>
-	
+
+<script src="{{ URL::asset('assets/custom/js/customHrFunction.js') }}"></script>
+<script>
+
 		$(document).ready(function(){
 			UsersLoginTimePeriodAndRolePermissionList()
 		});
-	
+
 		function setUserListStatus(userId, newStatus) {
 			var msg = (newStatus === 2) ? 'Deactivate this user? They will not be able to sign in.' : 'Activate this user?';
 			if (!window.confirm(msg)) {
@@ -152,10 +141,10 @@ input:checked + .slider:before {
 		}
 
 		function UsersLoginTimePeriodAndRolePermissionList(){
-			
+
 			var m = '<?php echo $m ?>';
-			var url = '<?php echo url('/') ?>'+'/udc/filterUsersLoginTimePeriodAndRolePermissionList';	
-				
+			var url = '<?php echo url('/') ?>'+'/udc/filterUsersLoginTimePeriodAndRolePermissionList';
+
 			$('#filterUsersLoginTimePeriodAndRolePermissionList').html('<tr><td colspan="11"><div class="row"><div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><div class="loader"></div></div></div></td></tr>');
 			$.ajax({
 				type:'GET',
@@ -166,7 +155,7 @@ input:checked + .slider:before {
 				}
 			});
 		}
-	
+
         function deleteUserWithRoles(param1,param2,param3,param4){
             $.ajax({
             url: ''+baseUrl+'/cdOne/deleteUserWithRoles',
@@ -177,58 +166,57 @@ input:checked + .slider:before {
             }
         });
         }
-		
+
 		var switchStatus = false;
-		
+
 		function testing(){
 			var selectedSwitchCase = [];
 			var unSelectedSwitchCase = [];
 			var checkedValues='';
 			var uncheckedValues='';
 		$('input[name="checkboxes"]').each(function() {
-				
-				
+
+
 			var res = $(this).val().split("<*>");
-			 
+
 			var ischecked= $(this).is(':checked');
 			 if(ischecked){
-				selectedSwitchCase.push(res[0]); 
-			 } 
+				selectedSwitchCase.push(res[0]);
+			 }
 			else if(!ischecked){
 				unSelectedSwitchCase.push(res[0]);
 			}
-			
+
 			});
-			
+
 				var another = [];
-				
-				
+
+
 				if(selectedSwitchCase.length === 0){
-					
+
 					another = ['empty',unSelectedSwitchCase];
 				}
 				else if(unSelectedSwitchCase.length === 0){
-					
+
 					another = [selectedSwitchCase,'empty'];
 				}
 				else if(selectedSwitchCase.length !== 0 || unSelectedSwitchCase.length !== 0 ){
 					another = [selectedSwitchCase,unSelectedSwitchCase];
 				}
-	
-				
-				
+
+
 			$.ajax({
 				url: '<?php echo url('/')?>/udc/checkUsersEnableOrDisable',
-				type: "GET", 
+				type: "GET",
 				data: {another:another},
 				success:function(data) {
-					
+
 				}
 			});
-		
-		
+
+
 		}
-		
+
 	function enableUserAccountDetail(userId,roleId){
 		var m = '<?php echo $m?>';
 		var url = '<?php echo url("/") ?>'+'/bd/enableUserAccountDetail';

@@ -4,51 +4,43 @@
 @extends('layouts.layouts')
 @section('content')
 <div class="well_N">
-    <div class="row">
-		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-			<?php echo CommonHelper::displayPrintButtonInBlade('PrintBalanceSheetReportSettingsList','','1');?>
-		</div>
-	</div>
-	<div class="lineHeight">&nbsp;</div>
-    <div class="row">
-        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-            <form method="GET" action="{{ route('balance-sheet.index') }}" class="mb-4">
-                <div class="row g-3">
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                        <label>Transaction Type</label>
-                        <select name="entry_type_id" id="entry_type_id" class="form-control select2">
-                            <option value="1">All Locations</option>
-                            <option value="2">Individual Location</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label>From Date</label>
-                        <input type="date" name="from" value="{{ $from }}" class="form-control">
-                    </div>
-                    <div class="col-md-3">
-                        <label>To Date</label>
-                        <input type="date" name="to" value="{{ $to }}" class="form-control">
-                    </div>
-                    <div class="col-md-3 align-self-end">
-                        <button type="submit" class="btn btn-primary">Filter</button>
-                    </div>
-                </div>
-            </form>
+    <div class="boking-wrp dp_sdw hr-page-card" id="PrintBalanceSheetReportSettingsList">
+        <div class="row hr-page-head hidden-print">
+            <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                {{ CommonHelper::displayPageTitle('View Balance Sheet Report') }}
+                <p class="hr-page-lead text-muted hidden-xs">Assets, liabilities, and equity for the selected period.</p>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 text-right hr-page-actions hidden-print">
+                <?php echo CommonHelper::displayPrintButtonInBlade('PrintBalanceSheetReportSettingsList','','1');?>
+            </div>
         </div>
-    </div>
-    <div class="lineHeight">&nbsp;</div>
-	<div class="boking-wrp dp_sdw" id="PrintBalanceSheetReportSettingsList">
-	    <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 hidden-print">
-                                {{CommonHelper::displayPageTitle('View Balance Sheet Report')}}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
+        <form method="GET" action="{{ route('balance-sheet.index') }}" class="hr-filter-form">
+            <div class="row filter-toolbar-actions hr-filter-row">
+                <div class="col-lg-3 col-md-6 col-sm-12 col-xs-12">
+                    <label for="entry_type_id">Transaction type</label>
+                    <select name="entry_type_id" id="entry_type_id" class="form-control select2">
+                        <option value="1">All Locations</option>
+                        <option value="2">Individual Location</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-3 col-sm-6 col-xs-12">
+                    <label for="balance_from">From date</label>
+                    <input type="date" name="from" id="balance_from" value="{{ $from }}" class="form-control">
+                </div>
+                <div class="col-lg-1 col-md-1 col-sm-6 col-xs-12 hr-between-wrap">
+                    <label class="hr-between-label">Range</label>
+                    <div class="hr-between-badge" title="Date range">↔</div>
+                </div>
+                <div class="col-lg-2 col-md-3 col-sm-6 col-xs-12">
+                    <label for="balance_to">To date</label>
+                    <input type="date" name="to" id="balance_to" value="{{ $to }}" class="form-control">
+                </div>
+                <div class="col-lg-2 col-md-12 col-sm-12 col-xs-12 hr-filter-submit-wrap">
+                    <button type="submit" class="btn btn-primary btn-sm btn-block"><i class="fa fa-filter" aria-hidden="true"></i> Apply</button>
+                </div>
+            </div>
+        </form>
+        <div class="reports-balance-sheet-body">
                         <div class="row mt-5">
                             <div class="col-md-6">
                                 <h4>Assets</h4>
@@ -434,8 +426,5 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection

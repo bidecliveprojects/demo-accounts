@@ -1,78 +1,39 @@
 @php
     use App\Helpers\CommonHelper;
+    use Illuminate\Support\Facades\DB;
+    $companyLogoRow = DB::table('companies')->where('id', Session::get('company_id'))->first();
+    $reportsLogoUrl = ($companyLogoRow && ! empty($companyLogoRow->school_logo) && file_exists($companyLogoRow->school_logo))
+        ? url($companyLogoRow->school_logo)
+        : url('assets/img/no_image.png');
 @endphp
 @extends('layouts.layouts')
 @section('content')
-<div class="row">
-    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-        <?php echo CommonHelper::displayPrintButtonInBlade('PrintDashboardDetail','','1');?>
-    </div>
-</div>
-<div class="lineHeight">&nbsp;</div>
 <div class="well_N">
-    <div class="boking-wrp dp_sdw">
-        <div class="row" id="PrintDashboardDetail">
-            <style>
-                .cardBody {
-                    border: 1px solid #ccc;
-                    margin-left: 16px;
-                    border-radius: 6px;
-                    box-shadow: 0 0 8px rgb(0 0 0 / 25%);
-                }
-                .cardHeading {
-                    font-size: 16px;
-                    text-align: center;
-                    font-weight: bold;
-                    color: #000;
-                    border-bottom: 1px #ccc solid;
-                    padding: 12px;
-                }
-                .cardContent {
-                    padding: 13px;
-                    text-align: center;
-                    font-size: 18px;
-                }
-                .leftCardBorder {
-                    border-left: 7px #0e276f solid;
-                    border-radius: 6px;
-                }
-                @media print {
-                    .cardBody {
-                        border: 1px solid #ccc;
-                        margin-left: 10px;
-                        border-radius: 6px;
-                        box-shadow: 0 0 8px rgb(0 0 0 / 25%);
-                    }
-                    .cardHeading {
-                        font-size: 12px;
-                        text-align: center;
-                        font-weight: bold;
-                        color: #000;
-                        border-bottom: 1px #ccc solid;
-                        padding: 12px;
-                    }
-                    .cardContent {
-                        padding: 13px;
-                        text-align: center;
-                        font-size: 14px;
-                    }
-                    .leftCardBorder {
-                        border-left: 7px #0e276f solid;
-                        border-radius: 6px;
-                    }
-                }
-            </style>
-            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="text-center">
-                    <img style="width:15%;" src="{{CommonHelper::displaySchoolLogo()}}">
+    <div class="boking-wrp dp_sdw hr-page-card" id="PrintDashboardDetail">
+        <div class="row hr-page-head hidden-print">
+            <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+                {{ CommonHelper::displayPageTitle('Monthly Summary Report') }}
+                <p class="hr-page-lead text-muted hidden-xs">Pick a month to load teacher and payroll dashboard figures.</p>
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 text-right hr-page-actions hidden-print">
+                {!! CommonHelper::displayPrintButtonInBlade('PrintDashboardDetail', '', '1') !!}
+            </div>
+        </div>
+        <div class="reports-ms-toolbar hr-filter-form">
+            <div class="row filter-toolbar-actions hr-filter-row align-items-end">
+                <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12 col-lg-offset-0">
+                    <label for="month_year">Period</label>
+                    <input type="month" name="month_year" id="month_year" value="{{ date('Y-m') }}" onchange="loadMonthlySummaryReportDetail()" class="form-control" />
                 </div>
-                <div class="text-center">
-                    <input type="month" name="month_year" id="month_year" value="{{date('Y-m')}}" onchange="loadMonthlySummaryReportDetail()" class="form-control" />
+                <div class="col-lg-4 col-md-6 col-sm-12 col-xs-12 reports-ms-logo-wrap hidden-print text-center text-md-left">
+                    <span class="text-muted small hidden-xs">School logo</span>
+                    <div class="reports-ms-logo">
+                        <img src="{{ $reportsLogoUrl }}" alt="">
+                    </div>
                 </div>
             </div>
-            <div class="lineHeight">&nbsp;</div>
-            <div id="loadData"></div>
         </div>
+        <div id="loadData" class="reports-ms-result"></div>
     </div>
 </div>
 @endsection
@@ -80,7 +41,7 @@
     <script>
         function loadMonthlySummaryReportDetail(){
             var monthYear = $('#month_year').val();
-            $("#loadData").html('<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><div class="loader"></div></div>');
+            $("#loadData").html('<div class="col-lg-12"><div class="loader"></div></div>');
             $.ajax({
                 url: '{{ route('reports.viewMonthlySummaryReport') }}',
                 method: 'GET',

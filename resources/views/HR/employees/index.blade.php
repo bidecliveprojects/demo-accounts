@@ -2,103 +2,67 @@
     use App\Helpers\CommonHelper;
 @endphp
 @extends('layouts.layouts')
-<style>
-    .table-responsive {
-        overflow-x: auto;
-        position: relative;
-    }
-
-    .table th,
-    .table td {
-        padding: 8px 12px;
-        text-align: center;
-        border: 1px solid #ddd;
-    }
-
-    .table th {
-        background-color: #f2f2f2;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-
-    .sticky-column {
-        position: sticky;
-        left: 0;
-        background-color: white;
-        z-index: 5;
-        /* Lower than header to avoid overlap */
-    }
-
-    .sticky-column-header {
-        position: sticky;
-        left: 0;
-        background-color: #f2f2f2;
-        /* Match header background */
-        z-index: 10;
-    }
-</style>
 @section('content')
-    <div class="well_N">
-        <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-                <?php echo CommonHelper::displayPrintButtonInBlade('PrintEmployeesList', '', '1'); ?>
-                <button id="csv" onclick="generateCSVFile('ExportEmployeesList','View Employee List')"
-                    class="btn btn-sm btn-warning">TO CSV</button>
-                <button id="pdf" onclick="generatePDFFile('ExportEmployeesList','View Employee List')"
-                    class="btn btn-sm btn-success">TO PDF</button>
-            </div>
-        </div>
-        <div class="lineHeight">&nbsp;</div>
-        <div class="boking-wrp dp_sdw" id="PrintEmployeesList">
-            <div class="row">
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 hidden-print">
+    <div class="well_N hr-employees-module">
+        <div class="boking-wrp dp_sdw hr-employees-panel hr-page-card" id="PrintEmployeesList">
+            <div class="row hr-employees-head hr-page-head hidden-print">
+                <div class="col-md-5 col-sm-12 hr-employees-title-col">
                     {{ CommonHelper::displayPageTitle('View Employee List') }}
+                    <p class="hr-employees-lead text-muted">Filter by type, department, or status. Export or open a record below.</p>
                 </div>
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right hidden-print">
-                    <a href="{{ route('employees.create') }}" class="btn btn-success btn-xs">+ Create New</a>
+                <div class="col-md-7 col-sm-12 text-right hr-employees-actions">
+                    <div class="hr-employees-actions-inner">
+                        {!! CommonHelper::displayPrintButtonInBlade('PrintEmployeesList', '', '1') !!}
+                        <div class="btn-group hr-employees-export-group" role="group" aria-label="Export">
+                            <button type="button" id="csv" onclick="generateCSVFile('ExportEmployeesList','View Employee List')"
+                                class="btn btn-default btn-sm"><i class="fa fa-file-excel-o" aria-hidden="true"></i> CSV</button>
+                            <button type="button" id="pdf" onclick="generatePDFFile('ExportEmployeesList','View Employee List')"
+                                class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF</button>
+                        </div>
+                        <a href="{{ route('employees.create') }}" class="btn btn-success btn-sm hr-employees-btn-create"><i class="fa fa-plus" aria-hidden="true"></i> New employee</a>
+                    </div>
                 </div>
             </div>
-            <form id="list_data" method="get" action="{{ route('employees.index') }}">
-                <div class="row">
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                        <label>Employee Type</label>
+
+            <form id="list_data" method="get" action="{{ route('employees.index') }}" class="hr-employees-filters hr-filter-form">
+                <div class="row filter-toolbar-actions employee-form-page hr-filter-row">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <label for="filterEmpType">Employee type</label>
                         <select name="filterEmpType" id="filterEmpType" class="form-control select2">
-                            <option value="">All Employee Type</option>
-                            <option value="1">Non Teaching Staff</option>
-                            <option value="2">Teaching Staff</option>
+                            <option value="">All types</option>
+                            <option value="1">Non-teaching staff</option>
+                            <option value="2">Teaching staff</option>
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                        <label>Departments</label>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <label for="filterDepartments">Department</label>
                         <select name="filterDepartments" id="filterDepartments" class="form-control select2">
-                            <option value="">All Departments</option>
+                            <option value="">All departments</option>
                             @foreach ($departments as $dRow)
                                 <option value="{{ $dRow->id }}">{{ $dRow->department_name }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                        <label>Status</label>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <label for="filterStatus">Status</label>
                         <select name="filterStatus" id="filterStatus" class="form-control select2">
-                            <option value="">All Status</option>
+                            <option value="">All statuses</option>
                             <option value="1">Active</option>
-                            <option value="2">InActive</option>
+                            <option value="2">Inactive</option>
                         </select>
                     </div>
-                    <div class="col-lg-1 col-md-1 col-sm-1 col-xs-12" style="padding: 30px;">
-                        <input type="button" id="filter-button" value="Filter" onclick="dataCall()"
-                            class="btn btn-xs btn-success" />
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 filter-toolbar-btn-wrap">
+                        <button type="button" id="filter-button" onclick="dataCall()"
+                            class="btn btn-primary btn-sm btn-block"><i class="fa fa-filter" aria-hidden="true"></i> Apply filters</button>
                     </div>
                 </div>
             </form>
-            <div class="lineHeight">&nbsp;</div>
-            <div class="row">
+
+            <div class="row app-table-sticky-wrap">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="table-responsive wrapper">
-                                <table class="table table-responsive table-bordered data-table" id="ExportEmployeesList">
+                    <div class="hr-table-wrap hr-employees-table-wrap">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-hover data-table hr-data-table" id="ExportEmployeesList">
                                     <thead>
                                         {{ CommonHelper::displayPDFTableHeader('1000', 'View Employee List') }}
                                         <tr>
@@ -113,7 +77,7 @@
                                             <th class="text-center">Marital Status</th>
                                             <th class="text-center">Job Type</th>
                                             <th class="text-center">Employment Status</th>
-                                            <th class="text-center">No of Childern</th>
+                                            <th class="text-center">No. of Children</th>
                                             <th class="text-center">Reference Name</th>
                                             <th class="text-center">Reference Contact No</th>
                                             <th class="text-center">Reference Address</th>
@@ -125,7 +89,6 @@
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -140,19 +103,18 @@
                     data: null,
                     title: 'Emp No. / Name',
                     render: function(data) {
-                        return `${data.emp_no} / ${data.emp_name}`; // Concatenate emp_no and emp_name
+                        return `${data.emp_no} / ${data.emp_name}`;
                     },
-                    className: 'sticky-column' // Make this column sticky
+                    className: 'sticky-column'
                 },
                 {
                     data: 'emp_image',
                     title: 'Image',
                     render: function(data) {
                         if (data) {
-                            return `<img src="${data}" alt="Image" style="width:50px; height:50px;" />`;
-                        } else {
-                            return '<img src="assets/img/no_image.png" alt="Default Image" style="width:50px; height:50px;" />';
+                            return `<img src="${data}" alt="" class="hr-employees-table-avatar" />`;
                         }
+                        return '<img src="assets/img/no_image.png" alt="" class="hr-employees-table-avatar hr-employees-table-avatar--placeholder" />';
                     }
                 },
                 {
@@ -183,22 +145,21 @@
                     data: 'maritarial_status',
                     title: 'Marital Status',
                     render: function(data) {
-                        return data === 1 ? 'Married' : 'Unmaried'; // Example of converting status code to text
+                        return data === 1 ? 'Married' : 'Unmarried';
                     }
                 },
                 {
                     data: 'job_type',
                     title: 'Job Type',
                     render: function(data) {
-                        return data === 1 ? 'Full Time' : 'Part Time'; // Example of converting status code to text
+                        return data === 1 ? 'Full Time' : 'Part Time';
                     }
                 },
                 {
                     data: 'employment_status',
                     title: 'Employment Status',
                     render: function(data) {
-                        return data === 1 ? 'Permanent' :
-                        'Contract Base'; // Example of converting status code to text
+                        return data === 1 ? 'Permanent' : 'Contract Base';
                     }
                 },
                 {
@@ -229,7 +190,8 @@
             ];
             get_ajax_data_two('ExportEmployeesList', columnTable);
         }
-        dataCall();
-        
+        $(document).ready(function() {
+            dataCall();
+        });
     </script>
 @endsection

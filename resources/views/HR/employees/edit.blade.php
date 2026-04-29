@@ -3,15 +3,15 @@
 @endphp
 @extends('layouts.layouts')
 @section('content')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<div class="well_N">
-	<div class="boking-wrp dp_sdw">
-	    <div class="row">
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                {{CommonHelper::displayPageTitle('Edit Employee Detail')}}
+<div class="well_N employee-form-page hr-employees-module hr-employees-form">
+	<div class="boking-wrp dp_sdw hr-employees-form-panel hr-page-card">
+	    <div class="row hr-employees-form-head">
+            <div class="col-lg-7 col-md-7 col-sm-7 col-xs-12">
+                {{ CommonHelper::displayPageTitle('Edit Employee Detail') }}
+                <p class="hr-employees-form-lead text-muted">Update profile, job details, and payroll. Required fields are marked <span class="text-danger">*</span>.</p>
             </div>
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right">
-                <a href="{{ route('employees.index') }}" class="btn btn-success btn-xs"><span></span> View List</a>
+            <div class="col-lg-5 col-md-5 col-sm-5 col-xs-12 text-right employee-form-toolbar hr-employees-back-toolbar">
+                <a href="{{ route('employees.index') }}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back to list</a>
             </div>
         </div>
         <div class="row">
@@ -20,6 +20,7 @@
                     @method('post')
                     @csrf
                     <div class="row">
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-user"></i> Personal &amp; contact</span></div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Employee Image</label>
                             <input type="file" name="emp_image"
@@ -115,14 +116,16 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-file-text-o"></i> Documents</span></div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>CNIC Document</label>
-                            <input type="file" name="cnic_document[]" multiple id="cnic_document" />
+                            <input type="file" name="cnic_document[]" multiple id="cnic_document" class="form-control" />
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>Other Document</label>
-                            <input type="file" name="other_document[]" multiple id="other_document" />
+                            <input type="file" name="other_document[]" multiple id="other_document" class="form-control" />
                         </div>
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-briefcase"></i> Job &amp; location</span></div>
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Departments</label>
                             <select name="department_id" id="department_id" class="form-control select2">
@@ -138,7 +141,7 @@
                             @enderror
                         </div>
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
-                            <label>Cities</label>
+                            <label>City</label>
                             <select name="city_id" id="city_id" class="form-control select2">
                                 @foreach($cities as $cRow)
                                     <option value="{{ $cRow->id }}" @if($employee->city_id == $cRow->id) selected @endif>
@@ -287,6 +290,7 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-clock-o"></i> Access &amp; attendance</span></div>
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Grace Time</label>
                             <select name="grace_time" id="grace_time" class="form-control select2">
@@ -314,8 +318,8 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="lineHeight">&nbsp;</div>
                     <div class="row">
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-graduation-cap"></i> Education &amp; skills</span></div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>How much schooling have you completed?</label>
                             <input type="text" name="schooling_completed" id="schooling_completed" value="{{$employeeEducationDetails->schooling_completed ?? '-'}}" class="form-control" />
@@ -328,7 +332,7 @@
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Do you Know how to write.?</label>
+                            <label>Do you know how to write?</label>
                             <select name="writing_skills" id="writing_skills" class="form-control select2">
                                 <option value="1" @if(!empty($employeeEducationDetails) && $employeeEducationDetails->writing_skills == 1) selected @endif>Yes</option>
                                 <option value="2" @if(!empty($employeeEducationDetails) && $employeeEducationDetails->writing_skills == 2) selected @endif>No</option>
@@ -348,8 +352,10 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="lineHeight">&nbsp;</div>
                     <div id="item_list">
+                        <div class="row">
+                            <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-building"></i> Work experience</span></div>
+                        </div>
                         @php
                             $employeeExperienceCounter = 1;
                         @endphp
@@ -362,68 +368,67 @@
                                 @php
                                     $counter++;
                                 @endphp
-                                <div class="row">
+                                <div class="row hr-employees-exp-row">
                                     <input type="hidden" name="experienceArray[]" id="experienceArray" value="{{$counter}}" />
-                                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                         <label>Organization Name</label>
                                         <input type="text" name="organization_name_{{$counter}}" id="organization_name_{{$counter}}" value="{{$eeRow->organization_name}}" class="form-control" />
                                     </div>
-                                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                         <label>Reason of Resign</label>
                                         <input type="text" name="reason_of_resign_{{$counter}}" id="reason_of_resign_{{$counter}}" value="{{$eeRow->reason_of_resign}}" class="form-control" />
                                     </div>
-                                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                         <label>Duration</label>
                                         <input type="text" name="duration_{{$counter}}" id="duration_{{$counter}}" value="{{$eeRow->duration}}" class="form-control" />
                                     </div>
-                                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 employee-exp-actions">
                                         @if($counter == 1)
-                                            <button type="button" style="margin: 23px;" class="btn btn-primary add_item_btn">
-                                                <i class="fa fa-plus" aria-hidden="true"></i>
+                                            <button type="button" class="btn btn-primary btn-sm add_item_btn employee-exp-add-btn">
+                                                <i class="fa fa-plus" aria-hidden="true"></i> Add row
                                             </button>
                                         @else
-                                            <button type="button" style="margin: 23px;" class="btn btn-danger remove_item_btn">
-                                                <i class="fa fa-remove" aria-hidden="true"></i>
+                                            <button type="button" class="btn btn-danger btn-sm remove_item_btn employee-exp-remove-btn">
+                                                <i class="fa fa-trash" aria-hidden="true"></i> Remove
                                             </button>
                                         @endif
                                     </div>
                                 </div>
                             @endforeach
                         @else
-                            <div class="row">
+                            <div class="row hr-employees-exp-row">
                                 <input type="hidden" name="experienceArray[]" id="experienceArray" value="1" />
-                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                     <label>Organization Name</label>
                                     <input type="text" name="organization_name_1" id="organization_name_1" value="" class="form-control" />
                                 </div>
-                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                     <label>Reason of Resign</label>
                                     <input type="text" name="reason_of_resign_1" id="reason_of_resign_1" value="" class="form-control" />
                                 </div>
-                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                     <label>Duration</label>
                                     <input type="text" name="duration_1" id="duration_1" value="" class="form-control" />
                                 </div>
-                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
-                                    <button type="button" style="margin: 23px;" class="btn btn-primary add_item_btn">
-                                        <i class="fa fa-plus" aria-hidden="true"></i>
+                                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 employee-exp-actions">
+                                    <button type="button" class="btn btn-primary btn-sm add_item_btn employee-exp-add-btn">
+                                        <i class="fa fa-plus" aria-hidden="true"></i> Add row
                                     </button>
                                 </div>
                             </div>
                         @endif
                     </div>
-                    <div class="lineHeight">&nbsp;</div>
-                    <div class="row">
+                    <div class="row hr-employees-salary-block">
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-money"></i> Salary &amp; allowances</span></div>
                         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                            <label>Basic Salary</label>
-                            <input type="number" name="basic_salary" id="basic_salary" class="form-control" value="{{$employee->basic_salary}}" />
+                            <label for="basic_salary">Basic salary</label>
+                            <input type="number" name="basic_salary" id="basic_salary" class="form-control" value="{{ $employee->basic_salary }}" step="0.01" min="0" />
                         </div>
                     </div>
-                    <div class="lineHeight">&nbsp;</div>
-                    <div class="row">
+                    <div class="row hr-employees-allowance-grid">
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
+                            <div class="table-responsive hr-employees-mini-table-wrap">
+                                <table class="table table-bordered table-striped table-condensed hr-employees-allowance-table">
                                     <thead>
                                         <tr>
                                             <th colspan="2">Allowance Detail</th>
@@ -446,8 +451,8 @@
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
+                            <div class="table-responsive hr-employees-mini-table-wrap">
+                                <table class="table table-bordered table-striped table-condensed hr-employees-allowance-table">
                                     <thead>
                                         <tr>
                                             <th colspan="2">Additional Allowance Detail</th>
@@ -470,11 +475,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="lineHeight">&nbsp;</div>
                     <div class="row">
-                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-                            <button type="reset" id="reset" class="btn btn-primary">Clear Form</button>
-                            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+                        <div class="col-xs-12 text-right employee-form-toolbar form-actions hr-employees-form-actions">
+                            <button type="reset" id="reset" class="btn btn-default"><i class="fa fa-undo" aria-hidden="true"></i> Reset unsaved</button>
+                            <button type="submit" class="btn btn-success"><i class="fa fa-check" aria-hidden="true"></i> Save changes</button>
                         </div>
                     </div>
                 </div>
@@ -485,6 +489,7 @@
 @endsection
 
 @section('script')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script>
         $('.select2').select2();
 
@@ -539,23 +544,23 @@
         $('.add_item_btn').click(function() {
             ++counter;
             $('#item_list').append(`
-                <div class="row">
+                <div class="row hr-employees-exp-row">
                     <input type="hidden" name="experienceArray[]" id="experienceArray" value="`+counter+`" />
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <label>Organization Name</label>
                         <input type="text" name="organization_name_`+counter+`" id="organization_name_`+counter+`" value="" class="form-control" />
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <label>Reason of Resign</label>
                         <input type="text" name="reason_of_resign_`+counter+`" id="reason_of_resign_`+counter+`" value="" class="form-control" />
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <label>Duration</label>
                         <input type="text" name="duration_`+counter+`" id="duration_`+counter+`" value="" class="form-control" />
                     </div>
-                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
-                        <button type="button" style="margin: 23px;" class="btn btn-danger remove_item_btn">
-                            <i class="fa fa-remove" aria-hidden="true"></i>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 employee-exp-actions">
+                        <button type="button" class="btn btn-danger btn-sm remove_item_btn employee-exp-remove-btn">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remove
                         </button>
                     </div>
                 </div>

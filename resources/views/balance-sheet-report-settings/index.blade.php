@@ -4,61 +4,49 @@
 @extends('layouts.layouts')
 @section('content')
 <div class="well_N">
-    <div class="row">
-		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-			<?php echo CommonHelper::displayPrintButtonInBlade('PrintBalanceSheetReportSettingsList','','1');?>
-			<button id="csv" onclick="generateCSVFile('ExportBalanceSheetReportSettingsList','View Balance Sheet Report Settings List')" class="btn btn-sm btn-warning">TO CSV</button>
-            <button id="pdf" onclick="generatePDFFile('ExportBalanceSheetReportSettingsList','View Balance Sheet Report Settings List')" class="btn btn-sm btn-success">TO PDF</button>
-		</div>
-	</div>
-	<div class="lineHeight">&nbsp;</div>
-    <form id="list_data" method="get" action="{{ route('balance-sheet-report-settings.index') }}">
-        <div class="row">
-            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                <label>Status</label>
-                <select name="filterStatus" id="filterStatus" class="form-control select2">
-                    <option value="">All Status</option>
-                    <option value="1">Active</option>
-                    <option value="2">InActive</option>
-                </select>
+    <div class="boking-wrp dp_sdw hr-page-card" id="PrintBalanceSheetReportSettingsList">
+        <div class="row hr-page-head hidden-print">
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+                {{ CommonHelper::displayPageTitle('View Balance Sheet Report Settings List') }}
+                <p class="hr-page-lead text-muted hidden-xs">Accounts classified for balance sheet reporting.</p>
             </div>
-            <div class="col-lg-1 col-md-1 col-sm-1 col-xs-12" style="padding: 30px;">
-                <input type="button" value="Filter" onclick="get_ajax_data()" class="btn btn-xs btn-success" />
+            <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12 text-right hr-page-actions hidden-print">
+                {!! CommonHelper::displayPrintButtonInBlade('PrintBalanceSheetReportSettingsList', '', '1') !!}
+                <div class="btn-group hr-export-group" role="group" aria-label="Export">
+                    <button type="button" id="csv" onclick="generateCSVFile('ExportBalanceSheetReportSettingsList','View Balance Sheet Report Settings List')" class="btn btn-default btn-sm"><i class="fa fa-file-excel-o" aria-hidden="true"></i> CSV</button>
+                    <button type="button" id="pdf" onclick="generatePDFFile('ExportBalanceSheetReportSettingsList','View Balance Sheet Report Settings List')" class="btn btn-default btn-sm"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> PDF</button>
+                </div>
+                <a href="{{ route('balance-sheet-report-settings.create') }}" class="btn btn-success btn-sm"><i class="fa fa-plus" aria-hidden="true"></i> New setting</a>
             </div>
         </div>
-    </form>
-    <div class="lineHeight">&nbsp;</div>
-	<div class="boking-wrp dp_sdw" id="PrintBalanceSheetReportSettingsList">
-	    <div class="row">
-            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="row">
-                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 hidden-print">
-                                {{CommonHelper::displayPageTitle('View Balance Sheet Report Settings List')}}
-                            </div>
-                            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right hidden-print">
-                                <a href="{{ route('balance-sheet-report-settings.create') }}" class="btn btn-success btn-xs">+ Create New</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive wrapper">
-                        <table class="table table-responsive table-bordered" id="ExportBalanceSheetReportSettingsList">
-                            {{CommonHelper::displayPDFTableHeader('1000','View Balance Sheet Report Settings List')}}
-                            <thead>
-                                <tr>
-                                    <th class="text-center">S.No</th>
-                                    <th class="text-center">Account Name</th>
-                                    <th class="text-center">Balance Sheet Account Type</th>
-                                </tr>
-                            </thead>
-                            <tbody id="data">
-                            </tbody>
-                        </table>
-                        </div>
-                    </div>
+        <form id="list_data" method="get" action="{{ route('balance-sheet-report-settings.index') }}" class="hr-filter-form">
+            <div class="row filter-toolbar-actions hr-filter-row">
+                <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+                    <label for="filterStatus">Status</label>
+                    <select name="filterStatus" id="filterStatus" class="form-control select2">
+                        <option value="">All statuses</option>
+                        <option value="1">Active</option>
+                        <option value="2">Inactive</option>
+                    </select>
                 </div>
+                <div class="col-lg-2 col-md-3 col-sm-6 col-xs-12 hr-filter-submit-wrap">
+                    <button type="button" onclick="get_ajax_data()" class="btn btn-primary btn-sm btn-block"><i class="fa fa-filter" aria-hidden="true"></i> Apply</button>
+                </div>
+            </div>
+        </form>
+        <div class="hr-table-wrap">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover hr-data-table" id="ExportBalanceSheetReportSettingsList">
+                    {{ CommonHelper::displayPDFTableHeader('1000','View Balance Sheet Report Settings List') }}
+                    <thead>
+                        <tr>
+                            <th class="text-center">S.No</th>
+                            <th class="text-center">Account Name</th>
+                            <th class="text-center">Balance Sheet Account Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data"></tbody>
+                </table>
             </div>
         </div>
     </div>

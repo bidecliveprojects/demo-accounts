@@ -3,9 +3,12 @@
     $loginCnic = Session::get('login_cnic');
 @endphp
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Demo Accounts</title>
     <!-- BOOTSTRAP CORE STYLE  -->
     <link href="{{ URL::asset('assets/css/bootstrap.css') }}" rel="stylesheet" />
@@ -56,7 +59,7 @@
             position: relative;
             padding: 15px;
             overflow-y: auto;
-            height: 550px;
+            max-height: min(85vh, 640px);
         }
     </style>
     <!-- notification css-->
@@ -216,14 +219,62 @@
     <script src="{{ URL::asset('assets/tableHTMLExport.js') }}"></script>
 </head>
 
-<body>
+<body class="app-shell">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     @if (empty($loginCnic))
         @include('includes._posclientNavigation')
     @else
         @include('includes._parentNavigation')
     @endif
 
-    <div class="container-fluid">
+    @php
+        $__generalOptionModule = request()->is(
+            'heads*',
+            'categories*',
+            'brands*',
+            'sizes*',
+            'tax-accounts*',
+            'payment-types*',
+            'bank-accounts*',
+            'cash-accounts*',
+            'chart-of-account-settings*',
+            'suppliers*',
+            'customers*',
+            'products*',
+            'balance-sheet-report-settings*',
+            'profit-and-loss-report-settings*',
+            'purchase-invoice-and-payment-setting*',
+            'sale-invoice-and-payment-setting*',
+            'payable-and-receivable-report-settings*',
+            'settings',
+            'settings/*',
+            'countries*',
+            'states*',
+            'cities*',
+            'departments*',
+            'locations*',
+            'companies*'
+        );
+        $__reportsModule = request()->is(
+            'reports*',
+            'balance-sheet',
+            'balance-sheet/*',
+            'cash-flow-statement',
+            'cash-flow-statement/*',
+            'sales-report',
+            'sales-report/*'
+        );
+        $__usersModule = request()->is(
+            'users',
+            'users/*',
+            'udc',
+            'udc/*',
+            'uad',
+            'uad/*'
+        );
+    @endphp
+
+    <div class="container-fluid app-main{{ request()->is('finance*') ? ' finance-module' : '' }}{{ request()->is('employees*', 'attendances*', 'loan', 'loan/*') ? ' hr-module' : '' }}{{ $__generalOptionModule ? ' general-module' : '' }}{{ $__reportsModule ? ' reports-module' : '' }}{{ $__usersModule ? ' users-module' : '' }}" id="main-content" tabindex="-1">
         @yield('content')
     </div>
     @if (empty($loginCnic))
@@ -253,7 +304,6 @@
         $accType = Auth::user()->acc_type;
         ?>
         @if (Route::current()->getName() == 'companies.create')
-            :
             <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
             @elseif(Route::current()->getName() == 'companies.index')
                 <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
@@ -267,52 +317,42 @@
                             @else
                                 <div id="companyListModel" class="modal fade in" role="dialog" aria-hidden="false">
         @endif
-        <div class="modal-dialog modalWidth dply">
-            <!-- Modal content-->
-            <div class="model-n modal-content">
-
-                <div class="modal-body">
-                    <div class="mdel-bx">
-                        <div class="model-logo"><img style="width:15%;" src="{{ CommonHelper::displaySchoolLogo() }}">
-                            <h4 class="modal-title">Select The Company</h4>
+        <div class="modal-dialog modalWidth dply company-selection-dialog">
+            <div class="model-n modal-content company-selection-content">
+                <div class="modal-body company-selection-modal-body">
+                    <div class="company-selection-hero text-center">
+                        <img class="company-selection-logo" src="{{ CommonHelper::displaySchoolLogo() }}" alt="">
+                        <h4 class="company-selection-title">Workspace access</h4>
+                        <p class="company-selection-subtitle text-muted">Choose your company and location to continue.</p>
+                    </div>
+                    @if ($accType == 'client')
+                        <div class="company-selection-quicklinks">
+                            <span class="company-selection-quicklinks-label text-muted">Shortcuts</span>
+                            <div class="company-selection-quicklinks-inner">
+                                <a class="btn btn-default btn-sm" href="{{ url('companies/create') }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> New company</a>
+                                <a class="btn btn-default btn-sm" href="{{ url('companies') }}"><i class="fa fa-list" aria-hidden="true"></i> Companies</a>
+                                <a class="btn btn-default btn-sm" href="{{ url('locations/create') }}"><i class="fa fa-map-marker" aria-hidden="true"></i> New location</a>
+                                <a class="btn btn-default btn-sm" href="{{ url('locations') }}"><i class="fa fa-list" aria-hidden="true"></i> Locations</a>
+                            </div>
                         </div>
-                        <div class="row">
-                            <div class="row">
-                                <div class="col-lg-8 col-md-8 col-sm-8 col-xs-12">
-                                    <?php 
-                                                                if ($accType == 'client') {
-                                                            ?>
-                                    <a class="btn btn-xs btn-primary" href="{{ url('companies/create') }}">Add New
-                                        Company</a>
-                                    <a class="btn btn-xs btn-success" href="{{ url('companies') }}">Company List</a>
-                                    <a class="btn btn-xs btn-primary" href="{{ url('locations/create') }}">Add
-                                        Company Location</a>
-                                    <a class="btn btn-xs btn-success" href="{{ url('locations') }}">Company Location
-                                        List</a>
-                                    <?php }else if($accType == 'owner'){?>
-
-                                    <a class="btn btn-xs btn-primary" href="{{ url('locations/create') }}">Add
-                                        Company Location</a>
-                                    <a class="btn btn-xs btn-success" href="{{ url('locations') }}">Company Location
-                                        List</a>
-                                    <?php 
-                                                                } else {
-                                                            ?>
-                                    &nbsp;
-                                    <?php    
-                                                                }
-                                                            ?>
-                                </div>
+                    @elseif ($accType == 'owner')
+                        <div class="company-selection-quicklinks">
+                            <span class="company-selection-quicklinks-label text-muted">Shortcuts</span>
+                            <div class="company-selection-quicklinks-inner">
+                                <a class="btn btn-default btn-sm" href="{{ url('locations/create') }}"><i class="fa fa-map-marker" aria-hidden="true"></i> New location</a>
+                                <a class="btn btn-default btn-sm" href="{{ url('locations') }}"><i class="fa fa-list" aria-hidden="true"></i> Locations</a>
                             </div>
-                            <div class="row">
-                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                                    <div id="loadMainSection"></div>
-                                </div>
-                            </div>
-                            <a href="{{ url('/signout') }}" class="btn-b">Sign Out</a>
+                        </div>
+                    @endif
+                    <div id="loadMainSection" class="company-selection-list-wrap">
+                        <div class="company-picker-loading text-center">
+                            <div class="loader"></div>
+                            <p class="text-muted company-picker-loading-text">Loading…</p>
                         </div>
                     </div>
-
+                    <div class="company-selection-footer text-center">
+                        <a href="{{ url('/signout') }}" class="btn btn-link company-selection-signout"><i class="fa fa-sign-out" aria-hidden="true"></i> Sign out</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -396,10 +436,21 @@
             });
         }
 
+        function companyPickerLoading(message) {
+            return (
+                '<div class="company-picker-loading text-center">' +
+                '<div class="loader"></div>' +
+                '<p class="text-muted company-picker-loading-text">' +
+                (message || 'Loading…') +
+                '</p></div>'
+            );
+        }
+
         function loadCompanies() {
             var accType = '<?php echo $accType; ?>';
+            $('#loadMainSection').html(companyPickerLoading('Loading companies…'));
             $.ajax({
-                url: '{{ url('/loadCompanies') }}', // Route to handle fetching Companies
+                url: '{{ url('/loadCompanies') }}',
                 type: 'GET',
                 data: {
                     filterSchoolMainScreenId: '',
@@ -410,6 +461,9 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error fetching Companies:', error);
+                    $('#loadMainSection').html(
+                        '<div class="alert alert-danger company-picker-error">Could not load companies. Please refresh the page.</div>'
+                    );
                 }
             });
         }
@@ -417,8 +471,9 @@
 
         function loadLocations(companyId) {
             var accType = '<?php echo $accType; ?>';
+            $('#loadMainSection').html(companyPickerLoading('Loading locations…'));
             $.ajax({
-                url: '{{ url('/loadLocations') }}', // Route to handle fetching locations
+                url: '{{ url('/loadLocations') }}',
                 type: 'GET',
                 data: {
                     company_id: companyId,
@@ -429,6 +484,9 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error fetching locations:', error);
+                    $('#loadMainSection').html(
+                        '<div class="alert alert-danger company-picker-error">Could not load locations. Try again or pick another company.</div>'
+                    );
                 }
             });
         }

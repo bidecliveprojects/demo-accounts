@@ -18,38 +18,34 @@
     $getMenus = DB::table('menus')->get();
     
 @endphp
-<div id="mySidenav" class="sidenavnr">
-    <div class="logo_wrp">
-        <img class="logo_m" src="{{CommonHelper::displaySchoolLogo()}}">
-
+<div id="mySidenav" class="sidenavnr app-sidebar app-sidebar--parent" role="navigation" aria-label="Parent portal menu">
+    <div class="logo_wrp app-sidebar-header">
+        <div class="app-sidebar-brand">
+            <img class="logo_m" src="{{ CommonHelper::displaySchoolLogo() }}" alt="">
+        </div>
         <div class="o_f">
-            <a href="#" class="closebtn theme-f-clr Navclose" ><i class="far fa-dot-circle"></i></a>
+            <a href="#" class="closebtn app-sidebar-collapse Navclose" title="Collapse sidebar" aria-label="Collapse or expand sidebar"><i class="fa fa-angle-double-left" aria-hidden="true"></i></a>
         </div>
     </div>
-    <ul class="m_list " id="myGroup">
-        
+    <ul class="m_list app-sidebar-list app-sidebar-list--flat" id="myGroup">
         <li>
             <div class="sm-bx">
                 <ul>
-                    <li class="dd" style="border-bottom: 1px solid #ccc; padding-top: 4px;">
-                        <a href="{{route('parents.dashboard')}}" class="settingListSb-subItem btn theme-bg">Dashboard</a>
+                    <li class="dd app-sidebar-parent-item">
+                        <a href="{{ route('parents.dashboard') }}" class="settingListSb-subItem btn theme-bg app-sidebar-parent-link"><i class="fa fa-home app-sidebar-parent-icon" aria-hidden="true"></i> Dashboard</a>
                     </li>
-                    <li class="dd" style="border-bottom: 1px solid #ccc; padding-top: 4px;">
-                        <a href="{{route('parents.comletedParasList')}}" class="settingListSb-subItem btn theme-bg">Completed Paras List</a>
+                    <li class="dd app-sidebar-parent-item">
+                        <a href="{{ route('parents.comletedParasList') }}" class="settingListSb-subItem btn theme-bg app-sidebar-parent-link"><i class="fa fa-list-alt app-sidebar-parent-icon" aria-hidden="true"></i> Completed paras list</a>
                     </li>
-                    <li class="dd" style="border-bottom: 1px solid #ccc; padding-top: 4px;">
-                        <a href="{{route('parents.attendance-list')}}" class="settingListSb-subItem btn theme-bg">Attendance List</a>
+                    <li class="dd app-sidebar-parent-item">
+                        <a href="{{ route('parents.attendance-list') }}" class="settingListSb-subItem btn theme-bg app-sidebar-parent-link"><i class="fa fa-calendar-check-o app-sidebar-parent-icon" aria-hidden="true"></i> Attendance list</a>
                     </li>
-                    <?php /*?><li class="dd" style="border-bottom: 1px solid #ccc; padding-top: 4px;">
-                        <a href="{{route('parents.studentPerformanceList')}}" class="settingListSb-subItem btn theme-bg">Student Performances List</a>
-                    </li><?php */?>
-                    <li class="dd" style="border-bottom: 1px solid #ccc; padding-top: 4px;">
-                        <a href="{{route('parents.viewStudentPerformanceReport')}}" class="settingListSb-subItem btn theme-bg">Student Performance Report</a>
+                    <li class="dd app-sidebar-parent-item">
+                        <a href="{{ route('parents.viewStudentPerformanceReport') }}" class="settingListSb-subItem btn theme-bg app-sidebar-parent-link"><i class="fa fa-bar-chart app-sidebar-parent-icon" aria-hidden="true"></i> Student performance report</a>
                     </li>
-                    <li class="dd" style="border-bottom: 1px solid #ccc; padding-top: 4px;">
-                        <a href="{{route('parents.viewMonthlyPerformanceReport')}}" class="settingListSb-subItem btn theme-bg">Monthly Performance Report</a>
+                    <li class="dd app-sidebar-parent-item">
+                        <a href="{{ route('parents.viewMonthlyPerformanceReport') }}" class="settingListSb-subItem btn theme-bg app-sidebar-parent-link"><i class="fa fa-calendar app-sidebar-parent-icon" aria-hidden="true"></i> Monthly performance report</a>
                     </li>
-                    
                 </ul>
             </div>
         </li>
@@ -100,7 +96,7 @@
                         </div>
                     </li>
                 </ul>
-                <div style="text-aligh: right">
+                <div style="text-align: right">
                     <h3 style="color: green">{{Session::get('company_name')}}</h3>
                     <div class="style-switcher">
                         <a href="#" id="switcher-toggler"><i class="fa fa-cog"></i></a>

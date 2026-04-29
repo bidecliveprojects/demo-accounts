@@ -2,13 +2,13 @@
     use App\Helpers\CommonHelper;
     $counterA = 1;
 @endphp
-<div class="row">
+<div class="row hr-detail-toolbar hidden-print">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
         <?php echo CommonHelper::displayPrintButtonInBlade('PrintEmployeesDetail','','1');?>
     </div>
 </div>
-<div class="lineHeight">&nbsp;</div>
-<div class="well" id="PrintEmployeesDetail">
+<div class="mb-3 hidden-print"></div>
+<div class="well hr-detail-well" id="PrintEmployeesDetail">
     <div class="row">
         <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
             <div class="row">
@@ -16,7 +16,7 @@
                     @if(file_exists($employeeDetail->emp_image))
                         <img src="{{$employeeDetail->emp_image}}" class="rounded" alt="Lights" style="width:200px; height: 150px">
                     @else
-                        <img src="'.url('assets/img/no_image.png').'" class="rounded" alt="Lights" style="width:200px; height: 150px">
+                        <img src="{{ url('assets/img/no_image.png') }}" class="rounded" alt="" style="width:200px; height: 150px">
                     @endif
                 </div>
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
@@ -33,7 +33,7 @@
                             <th colspan="8">Employee Detail</th>
                         </tr>
                     </thead>
-                    <tbdoy>
+                    <tbody>
                         <tr>
                             <th>Father Name / Husband Name</th>
                             <td>{{$employeeDetail->emp_father_name}}</td>

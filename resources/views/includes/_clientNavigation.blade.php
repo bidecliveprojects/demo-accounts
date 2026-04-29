@@ -31,77 +31,25 @@
     });
 @endphp
 
-<style>
-    .dd.active > a {
-        background: #f0f0f0;
-        border-left: 4px solid #007bff;
-    }
-
-    .mmastermnu .active a {
-        color: #007bff !important;
-        font-weight: bold !important;
-    }
-
-    .mmastermnu .active a:before {
-        content: "•";
-        margin-right: 8px;
-        color: #007bff;
-    }
-
-    .mmastermnu.show {
-        display: block;
-    }
-
-    .smastermnu .active a {
-        color: #007bff !important;
-        font-weight: bold !important;
-    }
-
-    .smastermnu .active a:before {
-        content: "•";
-        margin-right: 8px;
-        color: #007bff;
-    }
-
-    .smastermnu.show {
-        display: block;
-    }
-    .headerwrap {
-        margin: 1.3rem auto 0px;
-        border-radius: 0.428rem;
-        z-index: 12;
-        margin-left: 270px;
-        box-shadow: 0 4px 24px 0 rgb(34 41 47 / 10%);
-    }
-    .well_N {
-        position: relative;
-        transition: 300ms ease all;
-        backface-visibility: hidden;
-        min-height: calc(100% - 3.35rem);
-        margin-left: 270px;
-        /* padding:calc(2rem + 4.45rem + 1.3rem) 0.6rem 0; */
-        /* background: antiquewhite; */
-    }
-</style>
-
-<div id="mySidenav" class="sidenavnr">
-    <div class="logo_wrp">
-        <img class="logo_m" src="<?php echo url('/assets/img/logos/logo.png')?>">
-        
+<div id="mySidenav" class="sidenavnr app-sidebar" role="navigation" aria-label="Main menu">
+    <div class="logo_wrp app-sidebar-header">
+        <div class="app-sidebar-brand">
+            <img class="logo_m" src="<?php echo url('/assets/img/logos/logo.png'); ?>" alt="{{ config('app.name', 'Application') }}">
+        </div>
         <div class="o_f">
-            <a href="#" class="closebtn theme-f-clr Navclose" ><i class="far fa-dot-circle"></i></a>
+            <a href="#" class="closebtn app-sidebar-collapse Navclose" title="Collapse sidebar" aria-label="Collapse or expand sidebar"><i class="fa fa-angle-double-left" aria-hidden="true"></i></a>
         </div>
     </div>
-    <ul class="m_list " id="myGroup">
+    <ul class="m_list app-sidebar-list" id="myGroup">
         <?php
             $SubQueryMenu = DB::Connection('mysql')->table('menus')->select('menu_type','menu_icon')->distinct()->get();
             foreach($SubQueryMenu as $sqmRow){
                 $linkName = $menuType[$sqmRow->menu_type] ?? null;
                 $newCounter = 0;
         ?>
-                <li class="mainOption_<?php echo $sqmRow->menu_type?>">
+                <li class="mainOption_<?php echo $sqmRow->menu_type?> app-sidebar-module">
                     <div class="sm-bx">
-                        <button class="btn settingListSb theme-bg" data-toggle="collapse" data-target="#masterSetting<?php echo $sqmRow->menu_type?>" ><span><i class="<?php echo $sqmRow->menu_icon?>"></i></span> <p><?php echo $linkName?></p></button>
+                        <button type="button" class="btn settingListSb theme-bg app-sidebar-module-btn" data-toggle="collapse" data-target="#masterSetting<?php echo $sqmRow->menu_type; ?>"><span class="app-sidebar-module-icon"><i class="<?php echo $sqmRow->menu_icon; ?>" aria-hidden="true"></i></span><p class="app-sidebar-module-label"><?php echo e($linkName); ?></p></button>
                         <?php 
                             $mainMenuId = $sqmRow->menu_type;
                             $cacheKeySubMenu = 'sub_menus_for_' . $sqmRow->menu_type;
@@ -125,8 +73,8 @@
                                 }
                                 
                         ?>
-                        <div id="masterSetting<?php echo $sqmRow->menu_type?>" class="{{$menuTypeClass}} pmastermnu">
-                            <ul class="list-unstyled">
+                        <div id="masterSetting<?php echo $sqmRow->menu_type; ?>" class="{{ $menuTypeClass }} pmastermnu app-sidebar-submenu-wrap">
+                            <ul class="list-unstyled app-sidebar-submenu">
                             @foreach($SubQuerySubMenus as $sqsmRow)
                                 @php
                                     $menuId = $sqsmRow->id;
@@ -137,8 +85,8 @@
                                 @endphp
                                 @if (Auth::user()->email !== 'ushahfaisalranta@gmail.com')
                                     @canany($urls)
-                                        <li class="dd {{ $hasActiveChild ? 'active' : '' }}"><a href="#" class="settingListSb-subItem" data-toggle="collapsee" data-target="#masterSetting1-<?= $count ?>">{{$sqsmRow->menu_name}}</a>
-                                            <div id="masterSetting1-<?= $count ?>" class="collapsee smastermnu">
+                                        <li class="dd {{ $hasActiveChild ? 'active' : '' }}"><a href="#" class="settingListSb-subItem app-sidebar-group-link" data-toggle="collapsee" data-target="#masterSetting1-<?= $count ?>">{{ $sqsmRow->menu_name }}</a>
+                                            <div id="masterSetting1-<?= $count ?>" class="collapsee smastermnu app-sidebar-nested">
                                                 <ul class="list-unstyled">
                                                     <?php
                                                         $sqsmRowParentCode = $sqsmRow->id;
@@ -166,8 +114,8 @@
                                         </li>
                                     @endcanany
                                 @else
-                                    <li class="dd {{ $hasActiveChild ? 'active' : '' }}"><a href="#" class="settingListSb-subItem" data-toggle="collapsee" data-target="#masterSetting1-<?= $count ?>">{{$sqsmRow->menu_name}}</a>
-                                        <div id="masterSetting1-<?= $count ?>" class="collapsee smastermnu">
+                                    <li class="dd {{ $hasActiveChild ? 'active' : '' }}"><a href="#" class="settingListSb-subItem app-sidebar-group-link" data-toggle="collapsee" data-target="#masterSetting1-<?= $count ?>">{{ $sqsmRow->menu_name }}</a>
+                                        <div id="masterSetting1-<?= $count ?>" class="collapsee smastermnu app-sidebar-nested">
                                             <ul class="list-unstyled">
                                                 <?php
                                                     $sqsmRowParentCode = $sqsmRow->id;
@@ -207,9 +155,9 @@
         ?>
         <!-- All Company START--->
        
-        <li class="dropdown">
-            <div class="sm-bx">     
-                <button class="btn settingListSb theme-bg" data-toggle="modal" data-target="#companyListModel"><span><i class=""></i></span> <p>Company List</p></button>                                   
+        <li class="dropdown app-sidebar-module app-sidebar-module--footer">
+            <div class="sm-bx">
+                <button type="button" class="btn settingListSb theme-bg app-sidebar-module-btn app-sidebar-company-btn" data-toggle="modal" data-target="#companyListModel"><span class="app-sidebar-module-icon"><i class="fa fa-building" aria-hidden="true"></i></span><p class="app-sidebar-module-label">Company list</p></button>
             </div>
         </li>
     

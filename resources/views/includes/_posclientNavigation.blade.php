@@ -2,56 +2,6 @@
     use App\Helpers\CommonHelper;
 @endphp
 
-<style>
-    .dd.active > a {
-        background: #f0f0f0;
-        border-left: 4px solid #007bff;
-    }
-
-    .mmastermnu .active a {
-        color: #007bff !important;
-        font-weight: bold !important;
-    }
-
-    .mmastermnu .active a:before {
-        content: "•";
-        margin-right: 8px;
-        color: #007bff;
-    }
-
-    .mmastermnu.show {
-        display: block;
-    }
-
-    .smastermnu .active a {
-        color: #007bff !important;
-        font-weight: bold !important;
-    }
-
-    .smastermnu .active a:before {
-        content: "•";
-        margin-right: 8px;
-        color: #007bff;
-    }
-
-    .smastermnu.show {
-        display: block;
-    }
-    .headerwrap {
-        margin: 1.3rem auto 0px;
-        border-radius: 0.428rem;
-        z-index: 12;
-        box-shadow: 0 4px 24px 0 rgb(34 41 47 / 10%);
-    }
-    .well_N {
-        position: relative;
-        transition: 300ms ease all;
-        backface-visibility: hidden;
-        min-height: calc(100% - 3.35rem);
-        /* padding:calc(2rem + 4.45rem + 1.3rem) 0.6rem 0; */
-        /* background: antiquewhite; */
-    }
-</style>
 <div class="container-fluid">
     <div class="headerwrap">
         <nav class="navbar erp-menus">

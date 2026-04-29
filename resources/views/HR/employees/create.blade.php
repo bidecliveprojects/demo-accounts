@@ -2,19 +2,19 @@
     use App\Helpers\CommonHelper;
 @endphp
 @extends('layouts.layouts')
-@section('content')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script src="{{ URL::asset('assets/custom/js/multi-select-js-library.js') }}"></script>
+@section('custom-css-end')
 <link href="{{ URL::asset('assets/custom/css/multi-select-css-library.css') }}" rel="stylesheet">
-<script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/jquery.inputmask.bundle.js"></script>
-<div class="well_N">
-	<div class="boking-wrp dp_sdw">
-	    <div class="row">
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
-                {{CommonHelper::displayPageTitle('Add New Employee')}}
+@endsection
+@section('content')
+<div class="well_N employee-form-page hr-employees-module hr-employees-form">
+	<div class="boking-wrp dp_sdw hr-employees-form-panel hr-page-card">
+	    <div class="row hr-employees-form-head">
+            <div class="col-lg-7 col-md-7 col-sm-7 col-xs-12">
+                {{ CommonHelper::displayPageTitle('Add New Employee') }}
+                <p class="hr-employees-form-lead text-muted">Complete each section. Fields marked <span class="text-danger">*</span> are required.</p>
             </div>
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right">
-                <a href="{{ route('employees.index') }}" class="btn btn-success btn-xs"><span></span> View List</a>
+            <div class="col-lg-5 col-md-5 col-sm-5 col-xs-12 text-right employee-form-toolbar hr-employees-back-toolbar">
+                <a href="{{ route('employees.index') }}" class="btn btn-default btn-sm"><i class="fa fa-arrow-left" aria-hidden="true"></i> Back to list</a>
             </div>
         </div>
         <div class="row">
@@ -22,6 +22,7 @@
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     @csrf
                     <div class="row">
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-user"></i> Personal &amp; contact</span></div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Employee Image</label>
                             <input type="file" name="emp_image"
@@ -106,13 +107,14 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-briefcase"></i> Employment &amp; documents</span></div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>CNIC Document</label>
-                            <input type="file" name="cnic_document[]" multiple id="cnic_document" />
+                            <input type="file" name="cnic_document[]" multiple id="cnic_document" class="form-control" />
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>Other Document</label>
-                            <input type="file" name="other_document[]" multiple id="other_document" />
+                            <input type="file" name="other_document[]" multiple id="other_document" class="form-control" />
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>Job Type</label>
@@ -151,8 +153,8 @@
                             @enderror
                         </div>
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
-                            <label>Cities</label>
-                            <select name="city_id" id="city_id" class="form-control">
+                            <label>City</label>
+                            <select name="city_id" id="city_id" class="form-control select2">
                                 @foreach($cities as $cRow)
                                     <option value="{{ $cRow->id }}" {{ old('city_id') == $cRow->id ? 'selected' : '' }}>
                                         {{ $cRow->city_name }}
@@ -173,6 +175,7 @@
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-address-book"></i> Reference &amp; guardian</span></div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Reference Name</label>
                             <input type="text" name="relative_name"
@@ -268,7 +271,7 @@
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <div class="form-group">
-                                <label for="">Assign Roles</label>
+                                <label for="roles">Assign roles</label>
                                 <select name="roles[]" id="roles" class="form-control select2" multiple>
                                     @foreach ($roles as $role)
                                         <option value="{{ $role->name }}" 
@@ -285,6 +288,7 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-clock-o"></i> Access &amp; attendance</span></div>
                         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12">
                             <label>Grace Time</label>
                             <select name="grace_time" id="grace_time" class="form-control select2">
@@ -319,29 +323,31 @@
                         </div>
                     </div>
                     <div id="item_list">
-                        <div class="row">
+                        <div class="row hr-employees-exp-row">
+                            <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-building"></i> Work experience</span></div>
                             <input type="hidden" name="experienceArray[]" id="experienceArray" value="1" />
-                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                            <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                 <label>Organization Name</label>
                                 <input type="text" name="organization_name_1" id="organization_name_1" value="" class="form-control" />
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                            <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                 <label>Reason of Resign</label>
                                 <input type="text" name="reason_of_resign_1" id="reason_of_resign_1" value="" class="form-control" />
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                            <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                                 <label>Duration</label>
                                 <input type="text" name="duration_1" id="duration_1" value="" class="form-control" />
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
-                                <button type="button" style="margin: 23px;" class="btn btn-primary add_item_btn">
-                                    <i class="fa fa-plus" aria-hidden="true"></i>
+                            <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 employee-exp-actions">
+                                <button type="button" class="btn btn-primary btn-sm add_item_btn employee-exp-add-btn">
+                                    <i class="fa fa-plus" aria-hidden="true"></i> Add row
                                 </button>
                             </div>
                         </div>
                     </div>
                     <div id="singleCampusPayrollDetail">
                         <div class="row">
+                            <div class="col-xs-12 employee-section-heading"><span><i class="fa fa-money"></i> Salary</span></div>
                             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                                 <label>Salary</label>
                                 <input type="number" name="basic_salary" id="basic_salary" 
@@ -353,11 +359,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="lineHeight">&nbsp;</div>
                     <div class="row">
-                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">
-                            <button type="reset" id="reset" class="btn btn-primary">Clear Form</button>
-                            <button type="submit" class="btn btn-sm btn-success">Submit</button>
+                        <div class="col-xs-12 text-right employee-form-toolbar form-actions hr-employees-form-actions">
+                            <button type="reset" id="reset" class="btn btn-default"><i class="fa fa-undo" aria-hidden="true"></i> Clear</button>
+                            <button type="submit" class="btn btn-success"><i class="fa fa-check" aria-hidden="true"></i> Save employee</button>
                         </div>
                     </div>
                 </div>
@@ -368,6 +373,9 @@
 @endsection
 
 @section('script')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="{{ URL::asset('assets/custom/js/multi-select-js-library.js') }}"></script>
+    <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/3/jquery.inputmask.bundle.js"></script>
     <script>
         function sallarySectionShowHide(){
             var multipleSchoolCampus = $('#multiple_school_campus').val();
@@ -460,23 +468,23 @@
         $('.add_item_btn').click(function() {
             ++counter;
             $('#item_list').append(`
-                <div class="row">
+                <div class="row hr-employees-exp-row">
                     <input type="hidden" name="experienceArray[]" id="experienceArray" value="`+counter+`" />
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <label>Organization Name</label>
                         <input type="text" name="organization_name_`+counter+`" id="organization_name_`+counter+`" value="" class="form-control" />
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <label>Reason of Resign</label>
                         <input type="text" name="reason_of_resign_`+counter+`" id="reason_of_resign_`+counter+`" value="" class="form-control" />
                     </div>
-                    <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3">
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <label>Duration</label>
                         <input type="text" name="duration_`+counter+`" id="duration_`+counter+`" value="" class="form-control" />
                     </div>
-                    <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
-                        <button type="button" style="margin: 23px;" class="btn btn-danger remove_item_btn">
-                            <i class="fa fa-remove" aria-hidden="true"></i>
+                    <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12 employee-exp-actions">
+                        <button type="button" class="btn btn-danger btn-sm remove_item_btn employee-exp-remove-btn">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remove
                         </button>
                     </div>
                 </div>

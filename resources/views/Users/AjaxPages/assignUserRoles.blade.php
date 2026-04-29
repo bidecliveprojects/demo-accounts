@@ -1,10 +1,11 @@
 @php
     $assigned = $user->getRoleNames()->toArray();
 @endphp
-<div class="row">
+<div class="row users-ajax-panel">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-        <p class="text-muted">User: <strong>{{ e($user->name) }}</strong> — {{ e($user->email) }}</p>
-        <p class="small">Sidebar links use Spatie permission checks with route names. Assign roles that already include those permissions (configure under Roles).</p>
+        <h4 class="app-form-section-heading" style="margin-top:0;">Assign roles</h4>
+        <p class="text-muted small" style="margin-bottom:12px;"><strong>{{ e($user->name) }}</strong> — {{ e($user->email) }}</p>
+        <p class="small text-muted">Sidebar links use Spatie permission checks with route names. Assign roles that already include those permissions (configure under Roles).</p>
         <form id="saveUserRolesForm">
             @csrf
             <input type="hidden" name="user_id" value="{{ (int) $user->id }}">
@@ -22,7 +23,9 @@
                     <p class="text-warning">No roles found for this company. Create roles first (HR → Roles).</p>
                 @endforelse
             </div>
-            <button type="submit" class="btn btn-success btn-sm">Save roles</button>
+            <div class="hr-form-actions">
+                <button type="submit" class="btn btn-success btn-sm">Save roles</button>
+            </div>
         </form>
     </div>
 </div>

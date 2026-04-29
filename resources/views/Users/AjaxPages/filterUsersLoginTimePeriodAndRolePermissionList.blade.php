@@ -55,7 +55,7 @@
 			</td>
 			<td class="text-center hidden-print">
 				<div class="dropdown">
-					<button class="btn btn-xs dropdown-toggle theme-btn" type="button" data-toggle="dropdown">Action  <span class="caret"></span></button>
+					<button class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Actions <span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><a onclick="showDetailModelTwoParamerter('udc/viewProfile','<?php echo (int) $row->id ?>','view User Profile','')"><span class="glyphicon glyphicon-eye-open"></span> View Profile</a></li>
 						<?php if ((int) ($row->status ?? 0) === 1) { ?>

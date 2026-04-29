@@ -13,13 +13,13 @@ $currentDate = date('Y-m-d');
     <div class="row">
 		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 			<div class="well_N">
-				<div class="boking-wrp dp_sdw">
-					<div class="row">
+				<div class="boking-wrp dp_sdw hr-page-card employee-form-page">
+					<div class="row hr-page-head">
 						<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-							<?php echo CommonHelper::displayViewPageTitle('Create Users Form');?>
+							{{ CommonHelper::displayPageTitle('Create user') }}
+							<p class="hr-page-lead text-muted">Add a new system user, companies, and role access.</p>
 						</div>
 					</div>
-					<div class="lineHeight">&nbsp;</div>
 					<div class="row">
 						<?php echo Form::open(array('url' => 'uad/addUsersLoginTimePeriodAndPermissionDetail','id'=>'addUsersLoginTimePeriodAndPermissionDetail'));?>
 						<input type="hidden" name="_token" value="{{ csrf_token() }}">
