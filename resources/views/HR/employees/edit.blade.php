@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="row">
-            <form method="POST" action="{{ route('employees.update',$employee->id) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('employees.update',$employee->id) }}" enctype="multipart/form-data" id="employee_edit_form">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     @method('post')
                     @csrf
@@ -83,11 +83,16 @@
                             @enderror
                         </div>
                         
+                        @php
+                            $loginAccessEdit = (string) old('login_access', (string) ($employee->login_access ?? '1'));
+                            $loginAccessIsYes = $loginAccessEdit === '2';
+                        @endphp
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Employee Email</label>
-                            <input type="text" name="emp_email"
+                            <label for="emp_email">Employee Email <span id="emp_email_required_hint" class="text-danger" title="Required when Login Access is Yes" style="{{ $loginAccessIsYes ? '' : 'display: none;' }}">*</span></label>
+                            <input type="email" name="emp_email" inputmode="email" autocomplete="email"
                             class="form-control @error('emp_email') border border-danger @enderror"
-                            id="emp_email" value="{{$employee->emp_email}}" />
+                            id="emp_email" value="{{ old('emp_email', $employee->emp_email) }}" />
+                            <div id="emp_email_client_error" class="text-sm text-danger text-red-600" style="display: none;"></div>
                             @error('emp_email')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
@@ -150,7 +155,7 @@
                             <label>Date of Joining <span class="text-danger">*</span></label>
                             <input type="date" name="date_of_joining"
                             class="form-control @error('date_of_joining') border border-danger @enderror"
-                            id="date_of_joining" value="{{old('date_of_joining') ?? date('Y-m-d')}}" />
+                            id="date_of_joining" value="{{ old('date_of_joining', $employee->date_of_joining ?? '') }}" />
                             @error('date_of_joining')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
@@ -158,15 +163,17 @@
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>Job Type</label>
                             <select name="job_type" id="job_type" class="form-control select2">
-                                <option value="1" @if($employee->job_type == 1) selected @endif>Full Time</option>
-                                <option value="2" @if($employee->job_type == 2) selected @endif>Part Time</option>
+                                @php $jt = old('job_type', $employee->job_type); @endphp
+                                <option value="1" @selected((string) $jt === '1')>Full Time</option>
+                                <option value="2" @selected((string) $jt === '2')>Part Time</option>
                             </select>
                         </div>
                         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
                             <label>Employment Status</label>
                             <select name="employment_status" id="employment_status" class="form-control select2">
-                                <option value="1" @if($employee->employment_status == 1) selected @endif>Permanent</option>
-                                <option value="2" @if($employee->employment_status == 2) selected @endif>Contract Base</option>
+                                @php $es = old('employment_status', $employee->employment_status); @endphp
+                                <option value="1" @selected((string) $es === '1')>Permanent</option>
+                                <option value="2" @selected((string) $es === '2')>Contract Base</option>
                             </select>
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
@@ -251,8 +258,8 @@
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <label>Login Access</label>
                             <select name="login_access" id="login_access" class="form-control select2">
-                                <option value="1">No</option>
-                                <option value="2">Yes</option>
+                                <option value="1" @selected($loginAccessEdit === '1')>No</option>
+                                <option value="2" @selected($loginAccessEdit === '2')>Yes</option>
                             </select>
                             @error('login_access')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
@@ -260,12 +267,22 @@
                         </div>
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
                             <div class="form-group">
-                                <label for="">Assign Roles</label>
+                                @php
+                                    $rolesSelectedEdit = old('roles', $employeeAssignedRoleNames ?? []);
+                                    $rolesSelectedEdit = is_array($rolesSelectedEdit) ? $rolesSelectedEdit : [];
+                                @endphp
+                                <label for="roles">Assign Roles</label>
                                 <select name="roles[]" id="roles" class="form-control select2" multiple>
                                     @foreach ($roles as $role)
-                                        <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                        <option value="{{ $role->name }}" @selected(in_array($role->name, $rolesSelectedEdit, true))>{{ $role->name }}</option>
                                     @endforeach
                                 </select>
+                                @error('roles')
+                                    <div class="text-sm text-danger text-red-600">{{ $message }}</div>
+                                @enderror
+                                @error('roles.*')
+                                    <div class="text-sm text-danger text-red-600">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -470,7 +487,49 @@
 @section('script')
     <script>
         $('.select2').select2();
-        $('form[action*="employees"]').on('submit', function () {
+
+        function syncEmailRequiredForLoginAccess() {
+            var loginYes = $('#login_access').val() === '2';
+            var $hint = $('#emp_email_required_hint');
+            var $email = $('#emp_email');
+            var $err = $('#emp_email_client_error');
+            if (loginYes) {
+                $hint.show();
+                $email.prop('required', true).attr('aria-required', 'true');
+            } else {
+                $hint.hide();
+                $email.prop('required', false).removeAttr('aria-required');
+                $err.hide().text('');
+                $email.removeClass('border-danger');
+            }
+        }
+
+        $('#login_access').on('change select2:select', syncEmailRequiredForLoginAccess);
+        syncEmailRequiredForLoginAccess();
+
+        $('#employee_edit_form').on('submit', function (e) {
+            if ($('#login_access').val() === '2') {
+                var raw = ($('#emp_email').val() || '').trim();
+                var $err = $('#emp_email_client_error');
+                $('#emp_email').removeClass('border-danger');
+                $err.hide().text('');
+                if (!raw) {
+                    e.preventDefault();
+                    $('#emp_email').addClass('border-danger').prop('required', true);
+                    $err.text('Email is required when Login Access is Yes.').show();
+                    $('#emp_email').trigger('focus');
+                    return false;
+                }
+                var basicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!basicEmail.test(raw)) {
+                    e.preventDefault();
+                    $('#emp_email').addClass('border-danger');
+                    $err.text('Please enter a valid email address.').show();
+                    $('#emp_email').trigger('focus');
+                    return false;
+                }
+            }
+
             $(this).find('select.select2-hidden-accessible').each(function () {
                 $(this).select2('destroy');
             });

@@ -229,7 +229,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', 'index')->name('employees.index');
             Route::get('/create', 'create')->name('employees.create');
             Route::post('/store', 'store')->name('employees.store');
-            Route::post('/status', 'status')->name('employees.status');
+            Route::get('/show', 'show')->name('employees.show');
             Route::get('/{id}/edit', 'edit')->name('employees.edit');
             Route::post('/{id}/update', 'update')->name('employees.update');
             Route::post('/destroy/{id}', 'destroy')->name('employees.destroy');

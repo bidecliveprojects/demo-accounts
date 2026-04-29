@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="row">
-            <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data" id="employee_create_form">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     @csrf
                     <div class="row">
@@ -79,10 +79,11 @@
                         </div>
                         
                         <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12">
-                            <label>Employee Email</label>
-                            <input type="text" name="emp_email"
+                            <label for="emp_email">Employee Email <span id="emp_email_required_hint" class="text-danger" title="Required when Login Access is Yes" style="{{ (string) old('login_access', '1') === '2' ? '' : 'display: none;' }}">*</span></label>
+                            <input type="email" name="emp_email" inputmode="email" autocomplete="email"
                             class="form-control @error('emp_email') border border-danger @enderror"
                             id="emp_email" value="{{old('emp_email')}}" />
+                            <div id="emp_email_client_error" class="text-sm text-danger text-red-600" style="display: none;"></div>
                             @error('emp_email')
                                 <div class="text-sm text-danger text-red-600">{{ $message }}</div>
                             @enderror
@@ -409,6 +410,51 @@
             });
         }
         $('.select2').select2();
+
+        function syncEmailRequiredForLoginAccess() {
+            var loginYes = $('#login_access').val() === '2';
+            var $hint = $('#emp_email_required_hint');
+            var $email = $('#emp_email');
+            var $err = $('#emp_email_client_error');
+            if (loginYes) {
+                $hint.show();
+                $email.prop('required', true).attr('aria-required', 'true');
+            } else {
+                $hint.hide();
+                $email.prop('required', false).removeAttr('aria-required');
+                $err.hide().text('');
+                $email.removeClass('border-danger');
+            }
+        }
+
+        $('#login_access').on('change select2:select', syncEmailRequiredForLoginAccess);
+        syncEmailRequiredForLoginAccess();
+
+        $('#employee_create_form').on('submit', function (e) {
+            if ($('#login_access').val() !== '2') {
+                return;
+            }
+            var raw = ($('#emp_email').val() || '').trim();
+            var $err = $('#emp_email_client_error');
+            $('#emp_email').removeClass('border-danger');
+            $err.hide().text('');
+            if (!raw) {
+                e.preventDefault();
+                $('#emp_email').addClass('border-danger').prop('required', true);
+                $err.text('Email is required when Login Access is Yes.').show();
+                $('#emp_email').trigger('focus');
+                return false;
+            }
+            var basicEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!basicEmail.test(raw)) {
+                e.preventDefault();
+                $('#emp_email').addClass('border-danger');
+                $err.text('Please enter a valid email address.').show();
+                $('#emp_email').trigger('focus');
+                return false;
+            }
+        });
+
         // Add Item
         var counter = 1;
         $('.add_item_btn').click(function() {

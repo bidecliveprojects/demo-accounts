@@ -1,8 +1,6 @@
 <?php
-
-$id = $_GET['id'];
-$m = CommonFacades::getSessionCompanyId();
- $userDetail = DB::Connection('mysql')->table('users')->where('id','=',$id)->first();
+/** @var \App\Models\User $userDetail */
+$m = $m ?? \App\Facades\CommonFacades::getSessionCompanyId();
 ?>
 <div class="row">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-right">

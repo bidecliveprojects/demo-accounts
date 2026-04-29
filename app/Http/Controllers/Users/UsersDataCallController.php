@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Spatie\Permission\Models\Role;
 
 class UsersDataCallController extends Controller
 {
@@ -21,7 +22,7 @@ class UsersDataCallController extends Controller
      */
     public function __construct()
     {
-        //$this->middleware(['auth','MultiDB']);
+        $this->middleware('auth');
     }
 
     /**
@@ -32,12 +33,11 @@ class UsersDataCallController extends Controller
 
      public function filterUsersLoginTimePeriodAndRolePermissionList()
     {
-        // Retrieve session and authenticated user data
-        $companyId = Session::get('company_id');
-        $schoolCampusId = Session::get('company_location_id');
         $authUser = Auth::user();
+        if (! $authUser) {
+            abort(403);
+        }
 
-        // Define the authority users based on account type using a match expression
         $authorityUsers = match ($authUser->acc_type) {
             'client' => ['superadmin', 'user', 'superuser', 'owner'],
             'owner' => ['superadmin', 'user', 'superuser'],
@@ -45,34 +45,202 @@ class UsersDataCallController extends Controller
             default => [],
         };
 
-        // Parse company IDs from the authenticated user's data
-        $companyIdsString = $authUser->company_id;
-        $companyIds = explode('<*>', $companyIdsString);
+        $companyIds = array_values(array_filter(
+            explode('<*>', (string) ($authUser->company_id ?? '')),
+            fn ($id) => $id !== '' && ctype_digit((string) $id)
+        ));
 
-        // Build the base query to filter users
-        $query = User::whereIn('acc_type', $authorityUsers);
-            if($authUser->acc_type == 'client'){
+        $query = User::with('roles')->whereIn('acc_type', $authorityUsers);
 
-            }else{
-                $query->whereIn('company_id', $companyIds);
+        // company_id is often a single id or "1<*>2"; plain whereIn misses multi-company rows
+        if ($authUser->acc_type !== 'client' && count($companyIds) > 0) {
+            $query->where(function ($outer) use ($companyIds) {
+                foreach ($companyIds as $cid) {
+                    $outer->orWhere(function ($q) use ($cid) {
+                        $q->where('company_id', (string) $cid)
+                            ->orWhere('company_id', 'like', $cid . '<*>%')
+                            ->orWhere('company_id', 'like', '%<*>' . $cid . '<*>%')
+                            ->orWhere('company_id', 'like', '%<*>' . $cid);
+                    });
+                }
+            });
+        }
+
+        $userDetails = $query->orderBy('name')->get();
+
+        $allCompanyIds = $userDetails->pluck('company_id')
+            ->flatMap(fn ($c) => array_filter(explode('<*>', (string) $c)))
+            ->unique()
+            ->filter(fn ($id) => $id !== '' && ctype_digit((string) $id))
+            ->values();
+
+        $companyNameMap = $allCompanyIds->isNotEmpty()
+            ? DB::table('companies')->whereIn('id', $allCompanyIds->all())->pluck('name', 'id')
+            : collect();
+
+        $filterCompanyName = '';
+        if ($authUser->acc_type !== 'client') {
+            $sessionCompanyId = Session::get('company_id');
+            if ($sessionCompanyId !== null && $sessionCompanyId !== '') {
+                $filterCompanyName = (string) (DB::table('companies')->where('id', $sessionCompanyId)->value('name') ?? '');
             }
-            
+        }
 
-        // // Apply campus filtering based on the employee type
-        // if ($authUser->emp_type_multiple_campus == 1) {
-        //     $query->where('company_location_id', $schoolCampusId);
-        // } else {
-        //     // Decode the JSON string to an array and extract campus IDs
-        //     $campusArray = json_decode($authUser->company_location_ids_array, true); // Assuming JSON-encoded string
-        //     $campusIds = array_column($campusArray, 'company_location_id');
-        //     $query->whereIn('company_location_id', $campusIds);
-        // }
+        return view('Users.AjaxPages.filterUsersLoginTimePeriodAndRolePermissionList', compact(
+            'userDetails',
+            'companyNameMap',
+            'filterCompanyName'
+        ));
+    }
 
-        // Execute the query to get user details
-        $userDetails = $query->get();
+    public function setUserStatus(Request $request)
+    {
+        $authUser = Auth::user();
+        if (! $authUser) {
+            abort(403);
+        }
 
-        // Return the view with the retrieved user data
-        return view('Users.AjaxPages.filterUsersLoginTimePeriodAndRolePermissionList', compact('userDetails'));
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'status' => 'required|integer|in:1,2',
+        ]);
+
+        $targetId = (int) $validated['user_id'];
+        if ($targetId === (int) $authUser->id) {
+            return response()->json(['message' => 'You cannot change your own account status.'], 422);
+        }
+
+        $target = User::findOrFail($targetId);
+
+        if (! $this->authMayManageUser($authUser, $target)) {
+            return response()->json(['message' => 'You are not allowed to change this user.'], 403);
+        }
+
+        $target->status = (int) $validated['status'];
+        $target->save();
+
+        return response()->json(['message' => 'Updated', 'status' => $target->status]);
+    }
+
+    public function assignUserRoles(Request $request)
+    {
+        $authUser = Auth::user();
+        if (! $authUser) {
+            abort(403);
+        }
+
+        $id = (int) $request->query('id');
+        abort_unless($id > 0, 404);
+
+        $user = User::findOrFail($id);
+        if (! $this->authMayManageUser($authUser, $user)) {
+            abort(403);
+        }
+
+        $companyId = Session::get('company_id');
+        $roles = Role::query()
+            ->where('company_id', $companyId)
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get();
+
+        return view('Users.AjaxPages.assignUserRoles', compact('user', 'roles'));
+    }
+
+    public function saveUserRoles(Request $request)
+    {
+        $authUser = Auth::user();
+        if (! $authUser) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'roles' => 'nullable|array',
+            'roles.*' => 'string|max:255',
+        ]);
+
+        $target = User::findOrFail((int) $validated['user_id']);
+        if (! $this->authMayManageUser($authUser, $target)) {
+            return response()->json(['message' => 'You are not allowed to change this user.'], 403);
+        }
+
+        $companyId = Session::get('company_id');
+        $allowedRoleNames = Role::query()
+            ->where('company_id', $companyId)
+            ->where('status', 1)
+            ->pluck('name')
+            ->all();
+
+        $requested = array_values(array_unique($validated['roles'] ?? []));
+        foreach ($requested as $name) {
+            if (! in_array($name, $allowedRoleNames, true)) {
+                return response()->json(['message' => 'Invalid role: '.$name], 422);
+            }
+        }
+
+        $target->syncRoles($requested);
+        if (method_exists($target, 'forgetCachedPermissions')) {
+            $target->forgetCachedPermissions();
+        }
+
+        return response()->json(['message' => 'Roles saved. User will see menu items allowed by these roles.']);
+    }
+
+    protected function authMayManageUser(User $authUser, User $target): bool
+    {
+        if ((int) $authUser->id === (int) $target->id) {
+            return false;
+        }
+
+        $authorityUsers = match ($authUser->acc_type) {
+            'client' => ['superadmin', 'user', 'superuser', 'owner'],
+            'owner' => ['superadmin', 'user', 'superuser'],
+            'superadmin', 'superuser' => ['user', 'superuser'],
+            default => [],
+        };
+
+        if (! in_array($target->acc_type, $authorityUsers, true)) {
+            return false;
+        }
+
+        if ($authUser->acc_type === 'client') {
+            return true;
+        }
+
+        return $this->targetUserMatchesAuthCompanyScope($authUser, $target);
+    }
+
+    protected function targetUserMatchesAuthCompanyScope(User $authUser, User $target): bool
+    {
+        $companyIds = array_values(array_filter(
+            explode('<*>', (string) ($authUser->company_id ?? '')),
+            fn ($id) => $id !== '' && ctype_digit((string) $id)
+        ));
+
+        if (count($companyIds) === 0) {
+            return false;
+        }
+
+        $tid = (string) ($target->company_id ?? '');
+
+        foreach ($companyIds as $cid) {
+            $cid = (string) $cid;
+            if ($tid === $cid) {
+                return true;
+            }
+            if (str_starts_with($tid, $cid . '<*>')) {
+                return true;
+            }
+            if (str_contains($tid, '<*>' . $cid . '<*>')) {
+                return true;
+            }
+            if (str_ends_with($tid, '<*>' . $cid)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function loadSchoolCampusDetailDependSchoolDetailId(Request $request)
@@ -138,5 +306,56 @@ class UsersDataCallController extends Controller
                 <input type="button" class="btn btn-xs btn-danger" onclick="removeAssignSchoolAndSchoolCampusSectionRow('<?php echo $id?>')" value="Remove" />
             </div>
         <?php
+    }
+
+    public function userEdit(Request $request)
+    {
+        $id = (int) $request->query('id');
+        abort_unless($id > 0, 404);
+
+        $userDetails = User::findOrFail($id);
+        $authUser = Auth::user();
+        abort_unless(
+            $authUser && ($this->authMayManageUser($authUser, $userDetails) || (int) $userDetails->id === (int) $authUser->id),
+            403
+        );
+        $accType = Auth::user()?->acc_type ?? '';
+        $m = Session::get('company_id');
+        $companyIdExplode = array_filter(explode('<*>', (string) ($userDetails->company_id ?? '')));
+        $sgpeParts = explode('<*>', (string) ($userDetails->sgpe ?? ''));
+        $userPasswordDetaill = [
+            0 => $sgpeParts[0] ?? '',
+            1 => $sgpeParts[1] ?? '',
+            2 => $sgpeParts[2] ?? '',
+        ];
+        $pageType = $request->query('pageType', '');
+        $parentCode = $request->query('parentCode', '');
+
+        return view('Users.AjaxPages.userEdit', compact(
+            'userDetails',
+            'accType',
+            'm',
+            'id',
+            'companyIdExplode',
+            'userPasswordDetaill',
+            'pageType',
+            'parentCode'
+        ));
+    }
+
+    public function viewProfile(Request $request)
+    {
+        $id = (int) $request->query('id');
+        abort_unless($id > 0, 404);
+
+        $userDetail = User::findOrFail($id);
+        $authUser = Auth::user();
+        abort_unless(
+            $authUser && ((int) $userDetail->id === (int) $authUser->id || $this->authMayManageUser($authUser, $userDetail)),
+            403
+        );
+        $m = Session::get('company_id');
+
+        return view('Users.AjaxPages.viewProfile', compact('userDetail', 'm'));
     }
 }

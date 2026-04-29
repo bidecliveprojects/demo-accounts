@@ -135,7 +135,7 @@
                                     $urls = array_column($specificRecords, 'url');
                                     $hasActiveChild = collect($specificRecords)->contains(fn($record) => Route::currentRouteName() === $record['url']);
                                 @endphp
-                                @if (Auth::user()->email !== 'ushahfaisalranta@gmail.com' && Auth::user()->acc_type !== 'owner')
+                                @if (Auth::user()->email !== 'ushahfaisalranta@gmail.com')
                                     @canany($urls)
                                         <li class="dd {{ $hasActiveChild ? 'active' : '' }}"><a href="#" class="settingListSb-subItem" data-toggle="collapsee" data-target="#masterSetting1-<?= $count ?>">{{$sqsmRow->menu_name}}</a>
                                             <div id="masterSetting1-<?= $count ?>" class="collapsee smastermnu">
@@ -193,7 +193,7 @@
                                     $count ++;
                                 ?>
                             @endforeach
-                            @if (Auth::user()->email !== 'ushahfaisalranta@gmail.com' && Auth::user()->acc_type !== 'owner')
+                            @if (Auth::user()->email !== 'ushahfaisalranta@gmail.com')
                                 <script>
                                     removeMainOption('<?php echo $sqmRow->menu_type?>','<?php echo $newCounter?>');
                                 </script>

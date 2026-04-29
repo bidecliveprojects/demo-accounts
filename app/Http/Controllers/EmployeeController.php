@@ -16,10 +16,12 @@ use Yajra\DataTables\DataTables;
 
 use App\Mail\EmployeeCreated;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
@@ -27,6 +29,7 @@ class EmployeeController extends Controller
     protected $page;
     public function __construct(EmployeeRepositoryInterface $employeeRepository)
     {
+        $this->middleware('auth');
         $this->page = 'HR.employees.';
         $this->employeeRepository = $employeeRepository;
     }
@@ -37,11 +40,18 @@ class EmployeeController extends Controller
      */
     public function index(Request $request)
     {
-        $departments = Department::where('company_id', Session::get('company_id'))
-            ->where('company_location_id', Session::get('company_location_id'))
+        $companyId = $this->resolveCompanyIdForEmployee();
+        $locationId = $this->resolveCompanyLocationIdForEmployee();
+        $departments = Department::status(1)
+            ->where('company_id', $companyId)
+            ->when($locationId !== null && $locationId > 0, fn ($q) => $q->where('company_location_id', $locationId))
             ->get();
         if ($request->ajax()) {
-            $employees =  $this->employeeRepository->allEmployees($request->all());
+            $employees = $this->employeeRepository->allEmployees(
+                $request->all(),
+                $companyId,
+                $locationId
+            );
             return DataTables::of($employees)
                 ->addIndexColumn()
                 ->addColumn('emp_type', function ($row) {
@@ -103,9 +113,19 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $roles  = Role::where('company_id', Session::get('company_id'))->get();
+        $companyId = $this->resolveCompanyIdForEmployee();
+        $locationId = $this->resolveCompanyLocationIdForEmployee();
+        $roles = Role::query()
+            ->where('company_id', $companyId)
+            ->when(Schema::hasColumn('roles', 'company_location_id') && $locationId !== null && $locationId > 0, fn ($q) => $q->where('company_location_id', $locationId))
+            ->when(Schema::hasColumn('roles', 'status'), fn ($q) => $q->where('status', 1))
+            ->get();
         $cities = DB::table('cities')->get();
-        $departments = Department::status(1)->where('company_id', Session::get('company_id'))->where('company_location_id', Session::get('company_location_id'))->get();
+        $departments = Department::status(1)
+            ->where('company_id', $companyId)
+            ->when($locationId !== null && $locationId > 0, fn ($q) => $q->where('company_location_id', $locationId))
+            ->get();
+
         return view($this->page . 'create', compact('roles', 'cities', 'departments'));
     }
 
@@ -117,22 +137,23 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'emp_image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        $loginAccess = (int) $request->input('login_access', 1);
+
+        $rules = [
+            'emp_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'emp_type' => 'required|in:1,2',
             'emp_name' => '',
             'emp_father_name' => '',
             'date_of_birth' => '',
             'cnic_no' => '',
             'address' => '',
-            'emp_email' => '',
             'phone_no' => '',
             'maritarial_status' => '',
             'no_of_childern' => '',
             'relative_name' => '',
             'relative_contact_no' => '',
             'relative_address' => '',
-            'login_access' => '',
+            'login_access' => 'required|in:1,2',
             'grace_time' => '',
             'start_time' => '',
             'end_time' => '',
@@ -144,21 +165,57 @@ class EmployeeController extends Controller
             'department_id' => '',
             'date_of_joining' => '',
             'employment_status' => '',
-            'cnic_document.*' => 'file|mimes:jpg,png,pdf|max:2048',
-            'other_document.*' => 'file|mimes:jpg,png,pdf|max:2048',
-        ]);
+            'job_type' => 'required|in:1,2',
+            'cnic_document.*' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
+            'other_document.*' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
+        ];
 
-        $schoolId = Session::get('company_id');
+        if ($loginAccess === 2) {
+            $rules['emp_email'] = ['required', 'email:rfc', Rule::unique('users', 'email')];
+            $rules['roles'] = 'nullable|array';
+            $rules['roles.*'] = 'string|max:255';
+        } else {
+            $rules['emp_email'] = 'nullable|string|max:255';
+        }
+
+        $request->validate($rules);
+
+        $schoolId = $this->resolveCompanyIdForEmployee();
+        $schoolCampusId = $this->resolveCompanyLocationIdForEmployee();
+
+        if ($schoolId < 1) {
+            return redirect()->back()->withInput()->withErrors([
+                'login_access' => 'Company is not selected in session. Choose a company from the header, then try again.',
+            ]);
+        }
+
+        if ($schoolCampusId === null || $schoolCampusId < 1) {
+            return redirect()->back()->withInput()->withErrors([
+                'login_access' => 'Company location is not selected in session. Choose a location from the header, then try again.',
+            ]);
+        }
+
         $schoolCampusIdsArray = [];
         $empIdsArray = [];
+        $plainPasswordForMail = null;
 
-        // If multiple school campuses
-        $schoolCampusId = Session::get('company_location_id');
-        $this->processEmployee($request, $schoolCampusId, $schoolId, $schoolCampusIdsArray, $empIdsArray);
-        
-        // If login access is required
-        if ($request->input('login_access') == 2) {
-            $this->createUser($request, $empIdsArray, $schoolCampusIdsArray, $schoolId);
+        DB::transaction(function () use ($request, $schoolCampusId, $schoolId, &$schoolCampusIdsArray, &$empIdsArray, $loginAccess, &$plainPasswordForMail) {
+            $this->processEmployee($request, $schoolCampusId, $schoolId, $schoolCampusIdsArray, $empIdsArray);
+
+            if ($loginAccess === 2) {
+                $plainPasswordForMail = $this->createUserForEmployee($request, $empIdsArray, $schoolCampusIdsArray, $schoolId);
+            }
+        });
+
+        if ($loginAccess === 2 && $plainPasswordForMail !== null) {
+            $email = strtolower(trim((string) $request->input('emp_email')));
+            if ($email !== '') {
+                try {
+                    Mail::to($email)->send(new EmployeeCreated($request->input('emp_name'), $plainPasswordForMail));
+                } catch (\Throwable $e) {
+                    Log::warning('Employee user welcome mail failed: '.$e->getMessage());
+                }
+            }
         }
 
         return redirect()->route('employees.index')->with('message', 'Employee Created Successfully');
@@ -243,32 +300,40 @@ class EmployeeController extends Controller
         ];
     }
 
-    // Function to create user for employee
-    private function createUser($request, $empIdsArray, $schoolCampusIdsArray, $schoolId)
+    /**
+     * Creates the portal user for an employee with login access.
+     *
+     * @return string Plain password for welcome email (caller sends mail after commit).
+     */
+    private function createUserForEmployee(Request $request, array $empIdsArray, array $schoolCampusIdsArray, int $schoolId): string
     {
-        $password = Str::random(10);
+        $plainPassword = Str::random(12);
+        $email = strtolower(trim((string) $request->input('emp_email')));
+        $empName = trim((string) $request->input('emp_name'));
+
+        $campusLocationId = $schoolCampusIdsArray[0]['company_location_id'] ?? null;
+
         $user = User::create([
-            'emp_type_multiple_campus' => $request->input('multiple_school_campus'),
-            'emp_id' => $empIdsArray[0]['emp_id'],  // Assuming one employee per user creation
+            'emp_type_multiple_campus' => (int) $request->input('multiple_school_campus', 1),
+            'emp_id' => $empIdsArray[0]['emp_id'],
             'emp_ids_array' => json_encode($empIdsArray),
-            'acc_type' => 'superadmin',
-            'company_id' => $schoolId,
-            'company_location_id' => $schoolCampusIdsArray[0]['company_location_id'],  // Assuming one campus per user
+            'acc_type' => 'user',
+            'company_id' => (string) $schoolId,
+            'company_location_id' => $campusLocationId !== null && $campusLocationId !== '' ? (int) $campusLocationId : null,
             'company_location_ids_array' => json_encode($schoolCampusIdsArray),
             'mobile_no' => $request->input('phone_no'),
             'cnic_no' => $request->input('cnic_no'),
-            'name' => $request->input('emp_name'),
-            'email' => $request->input('emp_email'),
-            'password' => bcrypt($password),
-            'username' => '-',
-            'sgpe' => $password,
+            'name' => $empName,
+            'email' => $email,
+            'password' => $plainPassword,
+            'username' => $email,
+            'sgpe' => $empName.'<*>'.$plainPassword.'<*>'.$email,
+            'status' => 1,
         ]);
 
-        if ($request->roles) {
-            $user->assignRole($request->roles);
-        }
+        $this->syncEmployeeRoles($user, $request->input('roles', []));
 
-        Mail::to($request->input('emp_email'))->send(new EmployeeCreated($request->input('emp_name'), $password));
+        return $plainPassword;
     }
 
     private function employeeStore($data, $schoolId, $schoolCampusId, $basicSalary)
@@ -335,7 +400,7 @@ class EmployeeController extends Controller
         // ]);
         // DB::table('employee_education_details')->insert($eedData);
 
-        $experienceArray = $data['experienceArray'];
+        $experienceArray = $data['experienceArray'] ?? [];
         foreach ($experienceArray as $eaRow) {
             $eeData = array([
                 'employee_id' => $employeeId,
@@ -359,7 +424,9 @@ class EmployeeController extends Controller
      */
     public function show(Request $request)
     {
-        $id = $request->input('id');
+        $id = (int) $request->input('id');
+        $this->findEmployeeForCurrentTenant($id);
+
         $employeeDetail = DB::table('employees as e')
             ->leftJoin('cities as c', 'e.city_id', '=', 'c.id')
             ->leftJoin('departments as d', 'e.department_id', '=', 'd.id')
@@ -382,12 +449,20 @@ class EmployeeController extends Controller
      */
     public function edit($id)
     {
-        $employee = $this->employeeRepository->findEmployee($id);
+        $employee = $this->findEmployeeForCurrentTenant((int) $id);
+        $companyId = $this->resolveCompanyIdForEmployee();
+        $locationId = $this->resolveCompanyLocationIdForEmployee();
+
         $cities = DB::table('cities')->get();
-        $departments = Department::status(1)->where('company_id', Session::get('company_id'))
-            ->where('company_location_id', Session::get('company_location_id'))
+        $departments = Department::status(1)
+            ->where('company_id', $companyId)
+            ->when($locationId !== null && $locationId > 0, fn ($q) => $q->where('company_location_id', $locationId))
             ->get();
-        $roles  = Role::where('company_id', Session::get('company_id'))->get();
+        $roles = Role::query()
+            ->where('company_id', $companyId)
+            ->when(Schema::hasColumn('roles', 'company_location_id') && $locationId !== null && $locationId > 0, fn ($q) => $q->where('company_location_id', $locationId))
+            ->when(Schema::hasColumn('roles', 'status'), fn ($q) => $q->where('status', 1))
+            ->get();
         $employeeEducationDetails = DB::table('employee_education_details')->where('employee_id', $id)->first();
         $employeeExperiences = DB::table('employee_experiences')->where('employee_id', $id)->get();
         $normalAllowance = DB::table('allowance_type as atype')
@@ -397,8 +472,8 @@ class EmployeeController extends Controller
             })
             ->select('atype.*', 'ead.amount')
             ->where('atype.type', 1)
-            ->where('atype.company_id', Session::get('company_id'))
-            ->where('atype.company_location_id', Session::get('company_location_id'))
+            ->where('atype.company_id', $companyId)
+            ->when($locationId !== null && $locationId > 0, fn ($q) => $q->where('atype.company_location_id', $locationId))
             ->get();
         $additionalAllowance = DB::table('allowance_type as atype')
             ->leftJoin('employee_allowance_detail as ead', function ($join) use ($id) {
@@ -407,10 +482,26 @@ class EmployeeController extends Controller
             })
             ->select('atype.*', 'ead.amount')
             ->where('atype.type', 2)
-            ->where('atype.company_id', Session::get('company_id'))
-            ->where('atype.company_location_id', Session::get('company_location_id'))
+            ->where('atype.company_id', $companyId)
+            ->when($locationId !== null && $locationId > 0, fn ($q) => $q->where('atype.company_location_id', $locationId))
             ->get();
-        return view($this->page . 'edit', compact('employee', 'roles', 'employeeEducationDetails', 'departments', 'cities', 'employeeExperiences', 'normalAllowance', 'additionalAllowance'));
+
+        $portalUser = User::with('roles')->where('emp_id', $id)->first();
+        $employeeAssignedRoleNames = $portalUser
+            ? $portalUser->roles->pluck('name')->values()->all()
+            : [];
+
+        return view($this->page . 'edit', compact(
+            'employee',
+            'roles',
+            'employeeEducationDetails',
+            'departments',
+            'cities',
+            'employeeExperiences',
+            'normalAllowance',
+            'additionalAllowance',
+            'employeeAssignedRoleNames'
+        ));
     }
 
     /**
@@ -422,8 +513,9 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Validate request data
-        $data = $request->validate([
+        $loginAccess = (int) $request->input('login_access', 1);
+
+        $rules = [
             'emp_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'emp_type' => 'required|in:1,2',
             'emp_name' => 'required',
@@ -438,7 +530,7 @@ class EmployeeController extends Controller
             'relative_name' => 'required',
             'relative_contact_no' => 'required',
             'relative_address' => 'required',
-            'login_access' => 'required',
+            'login_access' => 'required|in:1,2',
             'grace_time' => 'required',
             'start_time' => 'required',
             'end_time' => 'required',
@@ -453,14 +545,27 @@ class EmployeeController extends Controller
             'employment_status' => 'nullable|in:1,2',
             'cnic_document.*' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
             'other_document.*' => 'nullable|file|mimes:jpg,png,pdf|max:2048',
-        ]);
+        ];
+
+        if ($loginAccess === 2) {
+            $existingUserId = User::where('emp_id', $id)->value('id');
+            $emailUnique = Rule::unique('users', 'email');
+            if ($existingUserId) {
+                $emailUnique = Rule::unique('users', 'email')->ignore($existingUserId);
+            }
+            $rules['emp_email'] = ['required', 'email:rfc', $emailUnique];
+            $rules['roles'] = 'nullable|array';
+            $rules['roles.*'] = 'string|max:255';
+        }
+
+        $data = $request->validate($rules);
 
         $data['emp_type'] = (int) $data['emp_type'];
         $data['guardian_name'] = trim((string) ($data['guardian_name'] ?? ''));
         $data['guardian_mobile_no'] = trim((string) ($data['guardian_mobile_no'] ?? ''));
         $data['guardian_address'] = trim((string) ($data['guardian_address'] ?? ''));
 
-        $employee = $this->employeeRepository->findEmployee($id);
+        $employee = $this->findEmployeeForCurrentTenant((int) $id);
         $registrationNo = $employee->emp_no;
 
         // Handle employee image upload
@@ -509,34 +614,62 @@ class EmployeeController extends Controller
 
     private function handleDocumentsUpload(Request $request, $employeeId, $registrationNo)
     {
-
         if ($request->hasFile('cnic_document')) {
             $employeeDocuments = DB::table('employee_documents')->where('employee_id', $employeeId)->where('document_type', 1)->get();
 
-            // Delete existing documents
             foreach ($employeeDocuments as $document) {
-                if (file_exists($document->document_path)) {
+                if ($document->document_path && file_exists($document->document_path)) {
                     unlink($document->document_path);
                 }
                 DB::table('employee_documents')->where('id', $document->id)->delete();
             }
 
-            // Upload CNIC documents
-            $this->uploadDocuments($request->file('cnic_document'), $employeeId, $registrationNo, 1);
+            $this->persistUploadedEmployeeDocuments($request->file('cnic_document'), (int) $employeeId, (string) $registrationNo, 1);
         }
 
         if ($request->hasFile('other_document')) {
-            $employeeDocuments = DB::table('employee_documents')->where('employee_id', $employeeId)->where('document_type', 1)->get();
+            $employeeDocuments = DB::table('employee_documents')->where('employee_id', $employeeId)->where('document_type', 2)->get();
 
-            // Delete existing documents
             foreach ($employeeDocuments as $document) {
-                if (file_exists($document->document_path)) {
+                if ($document->document_path && file_exists($document->document_path)) {
                     unlink($document->document_path);
                 }
                 DB::table('employee_documents')->where('id', $document->id)->delete();
             }
-            // Upload other documents
-            $this->uploadDocuments($request->file('other_document'), $employeeId, $registrationNo, 2);
+
+            $this->persistUploadedEmployeeDocuments($request->file('other_document'), (int) $employeeId, (string) $registrationNo, 2);
+        }
+    }
+
+    /**
+     * Insert rows into employee_documents from uploaded files (edit flow).
+     *
+     * @param  array<int, \Illuminate\Http\UploadedFile>|\Illuminate\Http\UploadedFile|null  $files
+     */
+    private function persistUploadedEmployeeDocuments($files, int $employeeId, string $registrationNo, int $documentType): void
+    {
+        if ($files === null) {
+            return;
+        }
+
+        if ($files instanceof \Illuminate\Http\UploadedFile) {
+            $files = [$files];
+        }
+
+        if ($files === []) {
+            return;
+        }
+
+        $employeeDocuments = [];
+        foreach ($files as $file) {
+            if ($file === null) {
+                continue;
+            }
+            $this->uploadDocument($file, $registrationNo, $employeeId, $documentType, $employeeDocuments);
+        }
+
+        if ($employeeDocuments !== []) {
+            DB::table('employee_documents')->insert($employeeDocuments);
         }
     }
 
@@ -575,13 +708,16 @@ class EmployeeController extends Controller
             'computer_skills',
             'writing_skills',
             'skills_writing',
-            'spiritual_connection'
+            'spiritual_connection',
         ]);
         $eedData['status'] = 1;
         $eedData['created_by'] = Auth::user()->name;
         $eedData['created_date'] = now()->format('Y-m-d');
 
-        DB::table('employee_education_details')->where('employee_id', $id)->update($eedData);
+        DB::table('employee_education_details')->updateOrInsert(
+            ['employee_id' => $id],
+            array_merge($eedData, ['employee_id' => $id])
+        );
     }
 
     private function updateExperiences(Request $request, $id)
@@ -605,37 +741,152 @@ class EmployeeController extends Controller
 
     private function handleUserAccess(Request $request, $id)
     {
-        if ($request->input('login_access') == 2) {
-            $user = User::where('emp_id', $id)->first();
+        if ((int) $request->input('login_access') !== 2) {
+            return;
+        }
 
-            if ($user) {
-                $user->update($this->getUserData($request, $id));
-                if ($request->roles) {
-                    $user->syncRoles($request->roles);
-                }
-            } else {
-                $user = User::create($this->getUserData($request, $id));
-                if ($request->roles) {
-                    $user->assignRole($request->roles);
-                }
-            }
+        $companyId = $this->resolveCompanyIdForEmployee();
+        $locationId = $this->resolveCompanyLocationIdForEmployee();
+
+        if ($companyId < 1 || $locationId === null || $locationId < 1) {
+            return;
+        }
+
+        $user = User::where('emp_id', $id)->first();
+        $email = strtolower(trim((string) $request->input('emp_email')));
+        $empName = trim((string) $request->input('emp_name'));
+
+        if ($user) {
+            $user->fill([
+                'acc_type' => 'user',
+                'mobile_no' => $request->input('phone_no'),
+                'cnic_no' => $request->input('cnic_no'),
+                'name' => $empName,
+                'email' => $email,
+                'username' => $email,
+                'company_id' => (string) $companyId,
+                'company_location_id' => $locationId,
+            ]);
+
+            $parts = explode('<*>', (string) ($user->sgpe ?? ''));
+            $storedPw = $parts[1] ?? '';
+            $user->sgpe = $empName.'<*>'.$storedPw.'<*>'.$email;
+
+            $user->save();
+
+            $this->syncEmployeeRoles($user, $request->input('roles', []));
+
+            return;
+        }
+
+        $plainPassword = Str::random(12);
+        $newUser = User::create([
+            'emp_type_multiple_campus' => (int) $request->input('multiple_school_campus', 1),
+            'emp_id' => $id,
+            'emp_ids_array' => json_encode([['emp_id' => $id]]),
+            'acc_type' => 'user',
+            'company_id' => (string) $companyId,
+            'company_location_id' => $locationId,
+            'company_location_ids_array' => json_encode([['company_location_id' => $locationId]]),
+            'mobile_no' => $request->input('phone_no'),
+            'cnic_no' => $request->input('cnic_no'),
+            'name' => $empName,
+            'email' => $email,
+            'password' => $plainPassword,
+            'username' => $email,
+            'sgpe' => $empName.'<*>'.$plainPassword.'<*>'.$email,
+            'status' => 1,
+        ]);
+
+        $this->syncEmployeeRoles($newUser, $request->input('roles', []));
+
+        try {
+            Mail::to($email)->send(new EmployeeCreated($empName, $plainPassword));
+        } catch (\Throwable $e) {
+            Log::warning('Employee user welcome mail failed on edit: '.$e->getMessage());
         }
     }
 
-    private function getUserData(Request $request, $id)
+    /**
+     * @param  array<int, string|mixed>  $roleNames
+     */
+    private function syncEmployeeRoles(User $user, array $roleNames): void
     {
-        return [
-            'emp_id' => $id,
-            'acc_type' => 'superadmin',
-            'mobile_no' => $request->input('phone_no'),
-            'cnic_no' => $request->input('cnic_no'),
-            'name' => $request->input('emp_name'),
-            'email' => $request->input('emp_email'),
-            'password' => Hash::make('123456'),
-            'username' => '-',
-            'sgpe' => '-',
-            'company_id' => Session::get('company_id'),
-        ];
+        $companyId = $this->resolveCompanyIdForEmployee();
+        if ($companyId < 1) {
+            return;
+        }
+
+        $names = array_values(array_filter(array_map('strval', $roleNames), fn ($n) => $n !== ''));
+
+        $q = Role::query()->where('company_id', $companyId);
+        if (Schema::hasColumn('roles', 'company_location_id')) {
+            $locId = $this->resolveCompanyLocationIdForEmployee();
+            if ($locId !== null && $locId > 0) {
+                $q->where('company_location_id', $locId);
+            }
+        }
+        if (Schema::hasColumn('roles', 'status')) {
+            $q->where('status', 1);
+        }
+        $allowed = $q->pluck('name')->all();
+
+        $clean = array_values(array_intersect($names, $allowed));
+
+        $user->syncRoles($clean);
+        if (method_exists($user, 'forgetCachedPermissions')) {
+            $user->forgetCachedPermissions();
+        }
+    }
+
+    protected function resolveCompanyIdForEmployee(): int
+    {
+        $raw = Session::get('company_id');
+        if ($raw !== null && $raw !== '' && is_numeric($raw)) {
+            $id = (int) $raw;
+            if ($id > 0) {
+                return $id;
+            }
+        }
+
+        $user = Auth::user();
+        if (! $user) {
+            return 0;
+        }
+
+        $cid = (string) ($user->company_id ?? '');
+        $parts = array_values(array_filter(
+            explode('<*>', $cid),
+            fn ($p) => $p !== '' && ctype_digit((string) $p)
+        ));
+        if ($parts !== []) {
+            return (int) $parts[0];
+        }
+
+        if ($cid !== '' && ctype_digit($cid)) {
+            return (int) $cid;
+        }
+
+        return 0;
+    }
+
+    protected function resolveCompanyLocationIdForEmployee(): ?int
+    {
+        $raw = Session::get('company_location_id');
+        if ($raw !== null && $raw !== '' && is_numeric($raw)) {
+            $id = (int) $raw;
+
+            return $id > 0 ? $id : null;
+        }
+
+        $user = Auth::user();
+        if ($user && $user->company_location_id !== null && $user->company_location_id !== '' && is_numeric($user->company_location_id)) {
+            $id = (int) $user->company_location_id;
+
+            return $id > 0 ? $id : null;
+        }
+
+        return null;
     }
 
     private function handleAllowances(Request $request, $id)
@@ -652,8 +903,14 @@ class EmployeeController extends Controller
 
     private function updateAllowances(array $allowances, Request $request, $id, $type)
     {
+        $companyId = $this->resolveCompanyIdForEmployee();
+        $locationId = $this->resolveCompanyLocationIdForEmployee();
+        if ($companyId < 1 || $locationId === null || $locationId < 1) {
+            return;
+        }
+
         DB::table('employee_allowance_detail')->where('type', $type)
-            ->where('company_id', Session::get('company_id'))
+            ->where('company_id', $companyId)
             ->where('employee_id', $id)
             ->delete();
 
@@ -666,8 +923,8 @@ class EmployeeController extends Controller
                 'status' => 1,
                 'created_by' => Auth::user()->name,
                 'created_date' => now()->format('Y-m-d'),
-                'company_id' => Session::get('company_id'),
-                'company_location_id' => Session::get('company_location_id'),
+                'company_id' => $companyId,
+                'company_location_id' => $locationId,
             ];
             DB::table('employee_allowance_detail')->insert($naData);
         }
@@ -681,13 +938,35 @@ class EmployeeController extends Controller
      */
     public function destroy($id)
     {
+        $this->findEmployeeForCurrentTenant((int) $id);
         $this->employeeRepository->changeEmployeeStatus($id, 2);
+
         return response()->json(['success' => 'Inactive Successfully!']);
     }
 
     public function changeInactiveToActiveRecord($id)
     {
+        $this->findEmployeeForCurrentTenant((int) $id);
         $this->employeeRepository->changeEmployeeStatus($id, 1);
+
         return response()->json(['success' => 'Active Successfully!']);
+    }
+
+    /**
+     * Restrict employee CRUD to current session company + location (tenant isolation).
+     */
+    protected function findEmployeeForCurrentTenant(int $id): Employee
+    {
+        $companyId = $this->resolveCompanyIdForEmployee();
+        $locationId = $this->resolveCompanyLocationIdForEmployee();
+
+        abort_if($companyId < 1, 403);
+        abort_if($locationId === null || $locationId < 1, 403);
+
+        return Employee::query()
+            ->where('id', $id)
+            ->where('company_id', $companyId)
+            ->where('company_location_id', $locationId)
+            ->firstOrFail();
     }
 }

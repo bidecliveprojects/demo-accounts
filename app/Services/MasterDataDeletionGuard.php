@@ -7,6 +7,7 @@ use App\Models\Country;
 use App\Models\States;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Role;
 
 class MasterDataDeletionGuard
@@ -94,12 +95,25 @@ class MasterDataDeletionGuard
     /**
      * @return array{ok: bool, message: string}
      */
-    public static function assertRoleDeletable(int $roleId, ?int $companyId = null): array
+    public static function assertRoleDeletable(int $roleId, ?int $companyId = null, ?int $companyLocationId = null): array
     {
         $companyId = $companyId ?? (int) session('company_id');
-        $role = Role::where('id', $roleId)->where('company_id', $companyId)->first();
+        $q = Role::where('id', $roleId)->where('company_id', $companyId);
+
+        if (Schema::hasColumn('roles', 'company_location_id')) {
+            $loc = $companyLocationId;
+            if ($loc === null) {
+                $raw = session('company_location_id');
+                $loc = ($raw !== null && $raw !== '' && is_numeric($raw)) ? (int) $raw : null;
+            }
+            if ($loc !== null && $loc > 0) {
+                $q->where('company_location_id', $loc);
+            }
+        }
+
+        $role = $q->first();
         if (! $role) {
-            return ['ok' => false, 'message' => 'Role not found or does not belong to this company.'];
+            return ['ok' => false, 'message' => 'Role not found or does not belong to this company/location.'];
         }
 
         $assignedToUsers = DB::table('model_has_roles')

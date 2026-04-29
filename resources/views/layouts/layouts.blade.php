@@ -480,6 +480,11 @@
             });
         }
 
+        /** Users module (and legacy blades) call this name; same behaviour as one-parameter modal */
+        function showDetailModelTwoParamerter(url, id, modalName) {
+            showDetailModelOneParamerter(url, id, modalName);
+        }
+
         function showFormModelForDataInsert(param) {
             var url = param.url; // 'brands.create'
             var type = param.type; // 'model'

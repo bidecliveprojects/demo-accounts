@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\users;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\MainMenuTitle;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -14,6 +15,12 @@ class UserController extends Controller
     // public function __construct(){
     //     $this->companyId = Session::get('company_id');
     // }
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function createMainMenuTitleForm()
     {
         $menuType = array(
@@ -44,8 +51,12 @@ class UserController extends Controller
 
     public function addUsersLoginTimePeriod()
     {
-
         $userList = DB::Connection('mysql')->table('users')->where('status', '=', '1')->where('company_id', '=', Session::get('company_id'))->get();
-        return view('Users.addUsersLoginTimePeriod', compact('userList'));
+        $companyId = Session::get('company_id');
+        $roles = $companyId
+            ? Role::query()->where('company_id', $companyId)->where('status', 1)->orderBy('name')->get()
+            : collect();
+
+        return view('Users.addUsersLoginTimePeriod', compact('userList', 'roles'));
     }
 }

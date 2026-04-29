@@ -33,8 +33,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'username','sgpe','suspended'
-        
+        'username',
+        'sgpe',
+        'suspended',
+        'status',
     ];
 
     /**

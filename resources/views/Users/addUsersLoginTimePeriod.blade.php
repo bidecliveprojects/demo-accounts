@@ -1,6 +1,6 @@
 <?php
 use App\Helpers\CommonHelper;
-$accType = Auth::user()->acc_type;
+$accType = auth()->user()?->acc_type ?? '';
 $currentDate = date('Y-m-d');
 
 ?>
@@ -108,12 +108,15 @@ $currentDate = date('Y-m-d');
 											<label class="sf-label">Select Company</label>
 											<select id="dates-field2" class="multiselect-ui form-control" name="company_id_detail[]" multiple="multiple" required="required">
 												<?php
+													$companiesList = collect();
 													if($accType == 'client'){
 														$companiesList = DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->get();
 													}else if($accType == 'owner' || $accType == 'superadmin' || $accType == 'superuser'){
-														$checkCompanyId = Auth::user()->company_id;
-														$a = explode("<*>",$checkCompanyId);
-														$companiesList = DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->whereIn('id', $a)->get();
+														$checkCompanyId = auth()->user()?->company_id ?? '';
+														$a = $checkCompanyId !== '' ? explode("<*>", $checkCompanyId) : [];
+														$companiesList = !empty($a)
+															? DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->whereIn('id', $a)->get()
+															: collect();
 													}
 													foreach($companiesList as $cRow1){
 												?>
@@ -124,6 +127,18 @@ $currentDate = date('Y-m-d');
 											</select>
 										</div>
 									</div>
+									@if(isset($roles) && $roles->count() > 0)
+									<div class="row">
+										<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+											<label class="sf-label">Assign roles (sidebar / menu access)</label>
+											<select name="roles[]" id="user_roles_select" class="multiselect-ui form-control" multiple="multiple">
+												@foreach($roles as $role)
+													<option value="{{ e($role->name) }}">{{ e($role->name) }}</option>
+												@endforeach
+											</select>
+										</div>
+									</div>
+									@endif
 								</div>
 							</div>
 						</div>

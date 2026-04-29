@@ -1,96 +1,70 @@
 <?php
-	use App\Helpers\CommonHelper;
 	$counter = 1;
-	$m = Session::get('company_id');
-	$data ='';
-	$authorityUsers = [];
-	$accType = Auth::user()->acc_type;
-	if($accType == 'client'){
-		$authorityUsers = ['superadmin','user','superuser'];
-	}else if($accType == 'superadmin'){
-		$authorityUsers = ['user','superuser'];
-	}else if($accType == 'superuser'){
-		$authorityUsers = ['user','superuser'];
-	}
-
-	$companyNameTwo = '';//CommonHelper::getCompanyNameTwo($m);
+	$accType = auth()->user()?->acc_type ?? '';
+	$companyNameMap = $companyNameMap ?? collect();
+	$filterCompanyName = $filterCompanyName ?? '';
 
 	foreach ($userDetails as $row){
-		$userPasswordDetaill = explode("<*>",$row->sgpe);
-		if($row->acc_type == 'user'){
-			$companyName = '';//CommonHelper::getCompanyNameTwo($row->company_id);
-		}else{
-			$explodeCompanyDetail = explode("<*>",$row->company_id);
-			$companyName = '';
-			foreach($explodeCompanyDetail as $ecdRow){
-				$companyName .= '';//CommonHelper::getCompanyNameTwo($ecdRow).',';
+		$companyNameForFilter = '';
+		$ids = array_filter(explode('<*>', (string) ($row->company_id ?? '')));
+		foreach ($ids as $ecdRow) {
+			if ($ecdRow === '' || ! ctype_digit((string) $ecdRow)) {
+				continue;
+			}
+			$cid = (int) $ecdRow;
+			$nm = $companyNameMap[$cid] ?? $companyNameMap[$ecdRow] ?? null;
+			if ($nm !== null && $nm !== '') {
+				$companyNameForFilter .= ($companyNameForFilter !== '' ? ', ' : '') . $nm;
 			}
 		}
+		$companyNameDisplay = $companyNameForFilter !== '' ? $companyNameForFilter : '—';
 
-		if($row->status == '2'){
+		if ((string) $row->status === '2' || (int) $row->status === 2) {
 			$rowBColor = 'danger';
 		}else{
 			$rowBColor = '';
 		}
 
-		if($accType == 'client'){
+		if ($accType === 'client') {
 			$hiddenRow = '';
-		}else{
-			if (strpos($companyName, $companyNameTwo) !== false) {
-				$hiddenRow = '';
-			}else{
-				$hiddenRow = 'hidden';
-			}
+		} elseif ($filterCompanyName === '') {
+			$hiddenRow = '';
+		} elseif ($companyNameForFilter === '') {
+			$hiddenRow = '';
+		} elseif (strpos($companyNameForFilter, $filterCompanyName) !== false) {
+			$hiddenRow = '';
+		} else {
+			$hiddenRow = 'hidden';
 		}
 ?>
 		<tr class="<?php echo $rowBColor.' '.$hiddenRow?>">
 			<td class="text-center" ><?php echo $counter++  ?> </td>
-			<td><?php //echo $companyName  ?> </td>
-			<td><?php //echo $row->name  ?> </td>
-			<td><?php echo $row->email  ?> </td>
+			<td><?php echo e($companyNameDisplay); ?></td>
+			<td><?php echo e($row->name ?? ''); ?></td>
+			<td><?php echo e($row->username ?? ''); ?></td>
+			<td><?php echo e($row->email ?? ''); ?></td>
+			<td><?php echo e($row->mobile_no ?? ''); ?></td>
+			<td><?php echo e($row->acc_type ?? ''); ?></td>
+			<td class="text-center"><?php echo ((int) ($row->status ?? 0) === 1) ? 'Active' : 'Inactive'; ?></td>
 			<td class="text-center" >
-				@foreach($row->roles as $role)
-					{{ $role->name }},
-				@endforeach
+				@forelse($row->roles as $role)
+					{{ $role->name }}{{ !$loop->last ? ', ' : '' }}
+				@empty
+					—
+				@endforelse
 			</td>
-			<td class="text-center hidden-print hidden">
+			<td class="text-center hidden-print">
 				<div class="dropdown">
 					<button class="btn btn-xs dropdown-toggle theme-btn" type="button" data-toggle="dropdown">Action  <span class="caret"></span></button>
 					<ul class="dropdown-menu">
-						<li><a onclick="showDetailModelTwoParamerter('udc/viewProfile','<?php echo $row->id ?>','view User Profile','')"><span class="glyphicon glyphicon-eye-open"></span> View Profile</a></li>
-						<?php
-							if($accType == 'client'){
-								if($row->status == 1){
-						?>
-									<li><a onclick="showDetailModelTwoParamerter('udc/userEdit','<?php echo $row->id ?>','User Edit Detail')"><span class="glyphicon glyphicon-eye-open"></span> Edit</a></li>
-									<?php /*?><li><a onclick="disableUserAccountDetail('<?php echo $row->id ?>','<?php echo $row->role_id?>')"><span class="glyphicon glyphicon-eye-open"></span> Disable Account</a></li>
-									<li><a onclick="showDetailModelTwoParamerter('udc/addCompanyRoleForm','<?php echo $row->id ?>','Add Company Role')"><span class="glyphicon glyphicon-eye-open"></span> Add Company Role</a></li>
-									<li><a href="{{ route('user-warehouse.permissions.create', $row->id) }}"><span class="glyphicon glyphicon-eye-open"></span> Assign Warehouse</a></li>
-									<li><a href="{{ route('notification.userNotificationPermissions', $row->id) }}"><span class="glyphicon glyphicon-eye-open"></span> Assign Notification</a></li>
-									<li><a onclick="showDetailModelTwoParamerter('udc/addUserAdditionalRightsForm','<?php echo $row->id ?>','Add User Additional Rights')"><span class="glyphicon glyphicon-eye-open"></span> Add User Additional Rights</a></li><?php */?>
-						<?php
-								}else{
-						?>
-									<?php /*?><li><a onclick="enableUserAccountDetail('<?php echo $row->id ?>','<?php echo $row->role_id?>')"><span class="glyphicon glyphicon-eye-open"></span> Enable Account</a></li><?php */?>
-						<?php
-								}
-							}else{
-								if($row->status == 1){
-						?>
-									<li><a onclick="showDetailModelTwoParamerter('udc/userEdit','<?php echo $row->id ?>','User Edit Detail')"><span class="glyphicon glyphicon-eye-open"></span> Edit</a></li>
-									<?php /*?><li><a onclick="disableUserAccountDetail('<?php echo $row->id ?>','<?php echo $row->role_id?>')"><span class="glyphicon glyphicon-eye-open"></span> Disable Account</a></li>
-									<li><a onclick="showDetailModelTwoParamerter('udc/addCompanyRoleForm','<?php echo $row->id ?>','Add Company Role')"><span class="glyphicon glyphicon-eye-open"></span> Add Company Role</a></li>
-									<li><a href="{{ route('user-warehouse.permissions.post', $row->id) }}"><span class="glyphicon glyphicon-eye-open"></span> Assign Warehouse</a></li>
-									<li><a href="{{ route('notification.userNotificationPermissions', $row->id) }}"><span class="glyphicon glyphicon-eye-open"></span> Assign Notification</a></li>
-									<li><a onclick="showDetailModelTwoParamerter('udc/addUserAdditionalRightsForm','<?php echo $row->id ?>','Add User Additional Rights')"><span class="glyphicon glyphicon-eye-open"></span> Add User Additional Rights</a></li><?php */?>
-						<?php
-								}else{
-						?>
-									<?php /*?><li><a onclick="enableUserAccountDetail('<?php echo $row->id ?>','<?php echo $row->role_id?>')"><span class="glyphicon glyphicon-eye-open"></span> Enable Account</a></li><?php */?>
-						<?php
-								}
-							}
-						?>
+						<li><a onclick="showDetailModelTwoParamerter('udc/viewProfile','<?php echo (int) $row->id ?>','view User Profile','')"><span class="glyphicon glyphicon-eye-open"></span> View Profile</a></li>
+						<?php if ((int) ($row->status ?? 0) === 1) { ?>
+							<li><a onclick="showDetailModelTwoParamerter('udc/userEdit','<?php echo (int) $row->id ?>','User Edit Detail')"><span class="glyphicon glyphicon-pencil"></span> Edit</a></li>
+							<li><a onclick="showDetailModelTwoParamerter('udc/assignUserRoles','<?php echo (int) $row->id ?>','Assign roles')"><span class="glyphicon glyphicon-tags"></span> Assign roles</a></li>
+							<li><a href="javascript:void(0)" onclick="setUserListStatus(<?php echo (int) $row->id; ?>, 2); return false;"><span class="glyphicon glyphicon-ban-circle"></span> Deactivate</a></li>
+						<?php } else { ?>
+							<li><a href="javascript:void(0)" onclick="setUserListStatus(<?php echo (int) $row->id; ?>, 1); return false;"><span class="glyphicon glyphicon-ok-circle"></span> Activate</a></li>
+						<?php } ?>
 					</ul>
 				</div>
 			</td>

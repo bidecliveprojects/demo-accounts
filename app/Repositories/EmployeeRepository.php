@@ -5,31 +5,41 @@ namespace App\Repositories;
 use App\Repositories\Interfaces\EmployeeRepositoryInterface;
 use App\Models\Employee;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Session;
-use Auth;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class EmployeeRepository implements EmployeeRepositoryInterface
 {
 
-    public function allEmployees($data)
+    public function allEmployees(array $data, ?int $companyId = null, ?int $companyLocationId = null)
     {
-        $status = $data['filterStatus'];
-        $empType = $data['filterEmpType'];
-        $departments = $data['filterDepartments'];
+        $status = $data['filterStatus'] ?? '';
+        $empType = $data['filterEmpType'] ?? '';
+        $departments = $data['filterDepartments'] ?? '';
+
+        $cid = $companyId ?? Session::get('company_id');
+        $lid = $companyLocationId ?? Session::get('company_location_id');
+
+        $cid = is_numeric($cid) ? (int) $cid : 0;
+        $lid = is_numeric($lid) ? (int) $lid : 0;
+
+        if ($cid < 1 || $lid < 1) {
+            return collect();
+        }
+
         return DB::table('employees as e')
             ->select('e.*')
-            ->when($status != '', function ($q) use ($status){
-                return $q->where('e.status','=',$status);
+            ->when($status !== '', function ($q) use ($status) {
+                return $q->where('e.status', '=', $status);
             })
-            ->when($empType != '', function ($q) use ($empType){
-                return $q->where('e.emp_type','=',$empType);
+            ->when($empType !== '', function ($q) use ($empType) {
+                return $q->where('e.emp_type', '=', $empType);
             })
-            ->when($departments != '', function ($q) use ($departments){
-                return $q->where('e.department_id','=',$departments);
+            ->when($departments !== '', function ($q) use ($departments) {
+                return $q->where('e.department_id', '=', $departments);
             })
-            ->where('e.company_id',Session::get('company_id'))
-            ->where('e.company_location_id',Session::get('company_location_id'))
+            ->where('e.company_id', $cid)
+            ->where('e.company_location_id', $lid)
             ->orderBy('e.id', 'ASC')
             ->get();
     }

@@ -1,13 +1,10 @@
 <?php
-
-	$accType = Auth::user()->acc_type;
-	$currentDate = date('Y-m-d');
-	$m;
-	$id = $_GET['id'];
-	$userDetails = DB::Connection('mysql')->table('users')->where('id','=',$id)->first();;
-	$companyIdExplode = explode("<*>",$userDetails->company_id);
-	$userPasswordDetaill = explode("<*>",$userDetails->sgpe);
-
+/** @var \App\Models\User $userDetails */
+use Illuminate\Support\Facades\Auth;
+$accType = $accType ?? (Auth::user()?->acc_type ?? '');
+$currentDate = date('Y-m-d');
+$pageType = $pageType ?? '';
+$parentCode = $parentCode ?? '';
 ?>
 	<div class="hidden" id="testingChecker">
 	</div>
@@ -21,11 +18,11 @@
 				</div>
 				<div class="lineHeight">&nbsp;</div>
 				<div class="row">
-					<?php echo Form::open(array('url' => 'uad/editUsersLoginTimePeriodAndPermissionDetail?m='.$m.'','id'=>'editUsersLoginTimePeriodAndPermissionDetail'));?>
+					<?php echo Form::open(array('url' => 'uad/editUsersLoginTimePeriodAndPermissionDetail?m='.urlencode((string)($m ?? '')),'id'=>'editUsersLoginTimePeriodAndPermissionDetail'));?>
 					<input type="hidden" name="_token" value="{{ csrf_token() }}">
-					<input type="hidden" name="pageType" value="<?php echo $_GET['pageType']?>">
-					<input type="hidden" name="userIds" id="userIds" value="<?php echo $id ?>">
-					<input type="hidden" name="parentCode" value="<?php echo $_GET['parentCode']?>">
+					<input type="hidden" name="pageType" value="<?php echo e($pageType); ?>">
+					<input type="hidden" name="userIds" id="userIds" value="<?php echo (int) $id ?>">
+					<input type="hidden" name="parentCode" value="<?php echo e($parentCode); ?>">
 					<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 						<div class="panel">
 							<div class="panel-body">
@@ -61,13 +58,14 @@
 											<div class="col-lg-2 col-md-2 col-sm-2 col-xs-12">
 												<label class="sf-label">Password</label>
 												<span style="font-size:17px !important; color:#F5F5F5 !important;"><strong>*</strong></span>
-												<input type="password" class="form-control requiredField" name="password" id="password" required value="<?php echo $userPasswordDetaill[1]; ?>" />
+												<input type="password" class="form-control requiredField" name="password" id="password" required value="<?php echo e($userPasswordDetaill[1] ?? ''); ?>" />
 											</div>
 										</div>
 										<div class="row">
 											<div class="col-lg-3 col-md-3 col-sm-3 col-xs-12" onchange="checkAccountType(); testingFunction();">
 												<label class="sf-label">Account type</label>
 												<select class="form-control" name="account_type" id="account_type" required="required">
+													<option value="owner" <?php if($userDetails->acc_type == 'owner'){ echo 'selected';} ?> >Owner</option>
 													<option value="user" <?php if($userDetails->acc_type == 'user'){ echo 'selected';} ?> >User</option>
 													<option value="superadmin" <?php if($userDetails->acc_type == 'superadmin'){ echo 'selected';} ?> >Super Admin</option>
 													<option value="superuser" <?php if($userDetails->acc_type == 'superuser'){ echo 'selected';} ?> >Super User</option>
@@ -109,16 +107,15 @@
 												<label class="sf-label">Select Company</label>
 												<select id="dates-field2" class="multiselect-ui form-control" name="company_id_detail[]" multiple="multiple" required="required">
 													<?php
+														$companiesList = collect();
 														if($accType == 'client'){
 															$companiesList = DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->get();
-														}else if($accType == 'superadmin'){
-															$checkCompanyId = Auth::user()->company_id;
-															$a = explode("<*>",$checkCompanyId);
-															$companiesList = DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->whereIn('id', $a)->get();
-														}else if($accType == 'superuser'){
-															$checkCompanyId = Auth::user()->company_id;
-															$a = explode("<*>",$checkCompanyId);
-															$companiesList = DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->whereIn('id', $a)->get();
+														}else if(in_array($accType, ['owner', 'superadmin', 'superuser'], true)){
+															$checkCompanyId = Auth::user()->company_id ?? '';
+															$a = $checkCompanyId !== '' ? explode("<*>", $checkCompanyId) : [];
+															$companiesList = !empty($a)
+																? DB::Connection('mysql')->table('companies')->select(['name','id','dbName'])->where('status','=','1')->whereIn('id', $a)->get()
+																: collect();
 														}
 														foreach($companiesList as $cRow1){
 															$selectedValue = '';
@@ -252,8 +249,8 @@
         $(document).ready(function() {
 			idArray = [];
 			var menus = ["Booking", "Finance", "Purchase", "Reports", "Sales","Users"];
-			var userId = $("#userId").val();
-			var m = '<?php echo $_GET["m"] ?>';
+			var userId = $("#userIds").val();
+			var m = '<?php echo e((string)($m ?? '')); ?>';
 
 			for (i = 0; i < menus.length; i++) {
 

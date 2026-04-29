@@ -1,6 +1,6 @@
 <?php
 use App\Helpers\CommonHelper;
-$accType = Auth::user()->acc_type;
+$accType = auth()->user()?->acc_type ?? '';
 $m = Session::get('company_id');
 //$accountYearDates = DB::Connection('mysql')->table('accountyear')->select('AccountYearStartDate','AccountYearEndDate')->where('status','=','1')->where('AccountYearId','=',Session::get('accountYear'))->first();
 $current_date = date('Y-m-d');
@@ -101,9 +101,13 @@ input:checked + .slider:before {
 										<th class="text-center">S.No</th>
 										<th class="text-center">Assign Company Name</th>
 										<th class="text-center">Name</th>
+										<th class="text-center">Username</th>
 										<th class="text-center">Email</th>
+										<th class="text-center">Mobile</th>
+										<th class="text-center">Account type</th>
+										<th class="text-center">Status</th>
 										<th class="text-center">Roles</th>
-										<th class="text-center hidden-print hidden">Action</th>
+										<th class="text-center hidden-print">Action</th>
 									</tr>
 								</thead>
 								<tbody id="filterUsersLoginTimePeriodAndRolePermissionList">
@@ -124,12 +128,35 @@ input:checked + .slider:before {
 			UsersLoginTimePeriodAndRolePermissionList()
 		});
 	
+		function setUserListStatus(userId, newStatus) {
+			var msg = (newStatus === 2) ? 'Deactivate this user? They will not be able to sign in.' : 'Activate this user?';
+			if (!window.confirm(msg)) {
+				return;
+			}
+			$.ajax({
+				url: '<?php echo url('/'); ?>/udc/setUserStatus',
+				type: 'POST',
+				data: {
+					_token: '<?php echo csrf_token(); ?>',
+					user_id: userId,
+					status: newStatus
+				},
+				success: function () {
+					UsersLoginTimePeriodAndRolePermissionList();
+				},
+				error: function (xhr) {
+					var m = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Request failed';
+					window.alert(m);
+				}
+			});
+		}
+
 		function UsersLoginTimePeriodAndRolePermissionList(){
 			
 			var m = '<?php echo $m ?>';
 			var url = '<?php echo url('/') ?>'+'/udc/filterUsersLoginTimePeriodAndRolePermissionList';	
 				
-			$('#filterUsersLoginTimePeriodAndRolePermissionList').html('<tr><td colspan="50"><div class="row"><div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><div class="loader"></div></div></div></td><tr>');
+			$('#filterUsersLoginTimePeriodAndRolePermissionList').html('<tr><td colspan="11"><div class="row"><div class="col-lg-12 col-md-12 col-sm-12 col-xs-12"><div class="loader"></div></div></div></td></tr>');
 			$.ajax({
 				type:'GET',
 				url:url,
