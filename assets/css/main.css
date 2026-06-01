@@ -2206,26 +2206,26 @@ body.app-shell .finance-module .finance-col-narrow {
 }
 
 /* --- HR + General Option + Reports: shared list/filter tokens (.reports-module for Reports menu) --- */
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-page-card {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-page-card {
   border-radius: var(--app-radius);
   padding-bottom: 1rem;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-page-head {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-page-head {
   align-items: flex-start;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--app-border);
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-page-lead {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-page-lead {
   margin: 8px 0 0;
   font-size: 13px;
   line-height: 1.45;
   max-width: 36rem;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-page-actions {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-page-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -2233,22 +2233,22 @@ body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) 
   gap: 8px;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-export-group .btn {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-export-group .btn {
   border-color: var(--app-border);
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-filter-form {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-filter-form {
   margin-bottom: 1rem;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-filter-row label {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-filter-row label {
   font-weight: 600;
   font-size: 12px;
   color: var(--app-text-muted);
   margin-bottom: 4px;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-between-wrap {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-between-wrap {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -2256,7 +2256,7 @@ body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) 
   min-height: 62px;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-between-label {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-between-label {
   visibility: hidden;
   height: 0;
   margin: 0;
@@ -2264,7 +2264,7 @@ body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) 
   overflow: hidden;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-between-badge {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-between-badge {
   flex: 1;
   display: flex;
   align-items: center;
@@ -2280,63 +2280,63 @@ body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) 
   user-select: none;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-filter-submit-wrap {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-filter-submit-wrap {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: 2px;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-filter-submit-wrap .btn {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-filter-submit-wrap .btn {
   min-height: 42px;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-table-wrap {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-table-wrap {
   border-radius: var(--app-radius-sm);
   border: 1px solid var(--app-border);
   overflow: hidden;
   background: #fff;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-table-wrap .table-responsive {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-table-wrap .table-responsive {
   margin-bottom: 0;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-data-table {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-data-table {
   margin-bottom: 0;
   font-size: 13px;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-data-table thead th {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-data-table thead th {
   font-weight: 700;
   white-space: nowrap;
   vertical-align: middle;
   background: #f4f6f9;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-import-form .form-group {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-import-form .form-group {
   margin-bottom: 1rem;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-import-sample-wrap label {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-import-sample-wrap label {
   display: block;
   min-height: 1.2em;
 }
 
-body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-form-actions {
+body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-form-actions {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--app-border);
 }
 
 @media (max-width: 991px) {
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-between-wrap {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-between-wrap {
     min-height: 0;
     align-items: center;
     padding: 8px 0;
   }
 
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-between-badge {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-between-badge {
     margin-top: 0;
     min-height: 36px;
     width: 100%;
@@ -2345,25 +2345,25 @@ body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) 
 }
 
 @media (max-width: 767px) {
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-page-actions {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-page-actions {
     justify-content: flex-start;
     margin-top: 12px;
   }
 
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-page-head .text-right {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-page-head .text-right {
     text-align: left !important;
   }
 
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-filter-submit-wrap .btn {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-filter-submit-wrap .btn {
     margin-top: 8px;
   }
 
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-export-group {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-export-group {
     width: 100%;
     display: flex;
   }
 
-  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module) .hr-export-group .btn {
+  body.app-shell :is(.hr-module, .general-module, .reports-module, .users-module, .users-module-surface) .hr-export-group .btn {
     flex: 1;
   }
 }

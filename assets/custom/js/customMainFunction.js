@@ -205,53 +205,333 @@ function singleDateWisePrint(param1, param2, param3, param4) {
 
 //End Print
 
-//Start Generate PDF
-function generateCSVFile(tableId, fileName) {
+//Start Generate PDF / CSV (full dataset for server-side DataTables)
+function isServerSideDataTable(tableId) {
+  var tableElement = $('#' + tableId);
+  return $.fn.dataTable.isDataTable(tableElement) && tableElement.DataTable().settings()[0].oFeatures.bServerSide;
+}
+
+function getExportColumns(tableId) {
+  return $('#' + tableId).data('export-columns') || [];
+}
+
+function shouldExportColumn(column) {
+  var cls = column.class || column.className || '';
+  if (typeof cls === 'string' && cls.indexOf('hidden-print') >= 0) {
+    return false;
+  }
+  if (column.data === 'action') {
+    return false;
+  }
+  var title = (column.title || '').toLowerCase();
+  return title !== 'action';
+}
+
+function stripHtml(html) {
+  if (html === null || html === undefined) {
+    return '';
+  }
+  var text = String(html);
+  if (text.indexOf('<') === -1) {
+    return text.trim();
+  }
+  var tmp = document.createElement('div');
+  tmp.innerHTML = text;
+  tmp.querySelectorAll('img').forEach(function (img) {
+    var src = img.getAttribute('src') || '';
+    img.replaceWith(document.createTextNode(src || '[Image]'));
+  });
+  return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+}
+
+function renderExportCell(column, row, rowIndex) {
+  var cellData = column.data === null || column.data === undefined ? row : row[column.data];
+  if (column.render) {
+    return stripHtml(column.render(cellData, 'export', row, { row: rowIndex }));
+  }
+  return stripHtml(cellData);
+}
+
+function escapeCsvField(value) {
+  var text = String(value == null ? '' : value);
+  text = text.replace(/"/g, '""');
+  return '"' + text + '"';
+}
+
+function downloadTextFile(filename, content, mimeType) {
+  var blob = new Blob([content], { type: mimeType || 'text/csv;charset=utf-8;' });
+  var link = document.createElement('a');
+  if (link.download !== undefined) {
+    var url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+}
+
+function fetchAllDataTableRows(tableId) {
+  var tableElement = $('#' + tableId);
+  var dt = tableElement.DataTable();
+  var params = $.extend(true, {}, dt.ajax.params());
+  params.start = 0;
+  params.length = -1;
+
+  return $.ajax({
+    url: dt.ajax.url(),
+    type: 'GET',
+    data: params,
+    dataType: 'json'
+  }).then(function (response) {
+    return response.data || [];
+  });
+}
+
+function getCurrentPageDataTableRows(tableId) {
+  return $('#' + tableId).DataTable().rows({ page: 'current' }).data().toArray();
+}
+
+function promptExportScope() {
+  if (typeof Swal === 'undefined') {
+    return $.when(window.confirm('Export complete data? Click OK for all records, Cancel for current page only.') ? 'complete' : 'current');
+  }
+
+  return Swal.fire({
+    title: 'Export options',
+    text: 'Which records do you want to export?',
+    icon: 'question',
+    showCancelButton: true,
+    showDenyButton: true,
+    confirmButtonText: 'Complete data',
+    denyButtonText: 'Current page',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#3085d6',
+    denyButtonColor: '#6c757d'
+  }).then(function (result) {
+    if (result.isConfirmed) {
+      return 'complete';
+    }
+    if (result.isDenied) {
+      return 'current';
+    }
+    return null;
+  });
+}
+
+function exportDomTableToCSV(tableId, fileName) {
   $('.hidden-print').remove();
   $('.hideExportTwo').remove();
-  $("#" + tableId + "").tableHTMLExport({ type: 'csv', filename: '' + fileName + '.csv' });
+  $('#' + tableId).tableHTMLExport({ type: 'csv', filename: fileName + '.csv' });
   location.reload();
 }
-function generatePDFFile(tableId, fileName) {
-  // Ensure to remove any hidden elements and show necessary elements
+
+function exportDomTableToPDF(tableId, fileName) {
   $('.hidden-print').remove();
-  $(".pdfClass").removeClass("hidden");
+  $('.pdfClass').removeClass('hidden');
 
-  // Get the table element
   var table = document.getElementById(tableId);
-
-  // Check if the table exists
   if (!table) {
     console.error("Table with ID '" + tableId + "' not found.");
+    setExportButtonsLoading(false);
     return;
   }
 
-  // Calculate the dimensions of the table
-  var width = table.offsetWidth;
-  var height = table.offsetHeight;
-
-  // Use dom-to-image to convert to PNG
-  domtoimage.toPng(table, {
-    bgcolor: '#ffffff'
-  }).then(function (dataUrl) {
+  domtoimage.toPng(table, { bgcolor: '#ffffff' }).then(function (dataUrl) {
     var img = new Image();
     img.src = dataUrl;
-
     img.onload = function () {
-      // Create a new jsPDF instance
       var pdf = new jsPDF('l', 'pt', [img.width, img.height]);
-
-      // Add the image to the PDF
       pdf.addImage(img, 'PNG', 0, 0, img.width, img.height);
-
-      // Save the PDF
-      pdf.save(fileName + ".pdf");
-
-      // Optional: Refresh the page
+      pdf.save(fileName + '.pdf');
       location.reload();
     };
   }).catch(function (error) {
     console.error('Error generating PDF:', error);
+    setExportButtonsLoading(false);
+  });
+}
+
+function buildCsvFromDataTableRows(tableId, rows) {
+  var columns = getExportColumns(tableId).filter(shouldExportColumn);
+  var lines = [columns.map(function (col) {
+    return escapeCsvField(col.title || '');
+  }).join(',')];
+
+  rows.forEach(function (row, idx) {
+    lines.push(columns.map(function (col) {
+      return escapeCsvField(renderExportCell(col, row, idx));
+    }).join(','));
+  });
+
+  return lines.join('\n');
+}
+
+function buildFullExportTableElement(tableId, rows) {
+  var original = document.getElementById(tableId);
+  var columns = getExportColumns(tableId).filter(shouldExportColumn);
+  var table = document.createElement('table');
+  table.className = original.className;
+  table.style.background = '#fff';
+
+  var thead = document.createElement('thead');
+  var originalThead = original.querySelector('thead');
+  if (originalThead) {
+    originalThead.querySelectorAll('tr.pdfClass, tr.hideExportTwo').forEach(function (tr) {
+      thead.appendChild(tr.cloneNode(true));
+    });
+  }
+
+  var headerRow = document.createElement('tr');
+  columns.forEach(function (col) {
+    var th = document.createElement('th');
+    th.className = 'text-center';
+    th.textContent = col.title || '';
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  rows.forEach(function (row, idx) {
+    var tr = document.createElement('tr');
+    columns.forEach(function (col) {
+      var td = document.createElement('td');
+      td.className = 'text-center';
+      td.textContent = renderExportCell(col, row, idx);
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  return table;
+}
+
+function setExportButtonsLoading(isLoading) {
+  $('#csv, #pdf').prop('disabled', isLoading);
+}
+
+function refreshTableDataForExport() {
+  var form = $('#list_data');
+  if (!form.length) {
+    return $.when();
+  }
+  return $.ajax({
+    type: 'get',
+    url: form.attr('action'),
+    data: form.serialize(),
+    cache: false
+  }).then(function (html) {
+    $('#data').html(html);
+  });
+}
+
+function exportServerSideDataTable(tableId, fileName, format, scope) {
+  setExportButtonsLoading(true);
+
+  var rowsPromise = scope === 'current'
+    ? $.when(getCurrentPageDataTableRows(tableId))
+    : fetchAllDataTableRows(tableId);
+
+  rowsPromise.done(function (rows) {
+    if (!rows.length) {
+      alert('No records found to export.');
+      return;
+    }
+
+    if (format === 'csv') {
+      downloadTextFile(fileName + '.csv', buildCsvFromDataTableRows(tableId, rows));
+      return;
+    }
+
+    var exportTable = buildFullExportTableElement(tableId, rows);
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:absolute;left:-10000px;top:0;background:#fff;padding:8px;';
+    wrapper.appendChild(exportTable);
+    document.body.appendChild(wrapper);
+
+    $(exportTable).find('.pdfClass').removeClass('hidden');
+
+    domtoimage.toPng(exportTable, { bgcolor: '#ffffff' }).then(function (dataUrl) {
+      var img = new Image();
+      img.src = dataUrl;
+      img.onload = function () {
+        var pdf = new jsPDF('l', 'pt', [img.width, img.height]);
+        pdf.addImage(img, 'PNG', 0, 0, img.width, img.height);
+        pdf.save(fileName + '.pdf');
+        document.body.removeChild(wrapper);
+      };
+    }).catch(function (error) {
+      document.body.removeChild(wrapper);
+      console.error('Error generating PDF:', error);
+      alert('Could not generate PDF. Try CSV export or fewer filters.');
+    });
+  }).fail(function () {
+    alert('Could not load records for export. Please try again.');
+  }).always(function () {
+    setExportButtonsLoading(false);
+  });
+}
+
+function runCSVExport(tableId, fileName, scope) {
+  if (isServerSideDataTable(tableId)) {
+    exportServerSideDataTable(tableId, fileName, 'csv', scope);
+    return;
+  }
+
+  if (scope === 'complete') {
+    setExportButtonsLoading(true);
+    refreshTableDataForExport().done(function () {
+      exportDomTableToCSV(tableId, fileName);
+    }).fail(function () {
+      alert('Could not load data for export.');
+      setExportButtonsLoading(false);
+    });
+    return;
+  }
+
+  exportDomTableToCSV(tableId, fileName);
+}
+
+function runPDFExport(tableId, fileName, scope) {
+  if (isServerSideDataTable(tableId)) {
+    exportServerSideDataTable(tableId, fileName, 'pdf', scope);
+    return;
+  }
+
+  if (scope === 'complete') {
+    setExportButtonsLoading(true);
+    refreshTableDataForExport().done(function () {
+      exportDomTableToPDF(tableId, fileName);
+    }).fail(function () {
+      alert('Could not load data for export.');
+      setExportButtonsLoading(false);
+    });
+    return;
+  }
+
+  setExportButtonsLoading(true);
+  exportDomTableToPDF(tableId, fileName);
+}
+
+function generateCSVFile(tableId, fileName) {
+  promptExportScope().then(function (scope) {
+    if (!scope) {
+      return;
+    }
+    runCSVExport(tableId, fileName, scope);
+  });
+}
+
+function generatePDFFile(tableId, fileName) {
+  promptExportScope().then(function (scope) {
+    if (!scope) {
+      return;
+    }
+    runPDFExport(tableId, fileName, scope);
   });
 }
 //End Generate PDF
@@ -1070,11 +1350,13 @@ function get_ajax_data_two(tableId, columns) {
   var actionUrl = form.attr('action');
   var tableElement = $(`#${tableId}`);
 
+  tableElement.data('export-columns', columns);
+
   // Destroy the existing DataTable instance if it exists
   if ($.fn.dataTable.isDataTable(tableElement)) {
     tableElement.DataTable().destroy();
-    tableElement.empty(); // Clear table content
   }
+  tableElement.find('tbody').empty();
   tableElement.DataTable({
     processing: true,
     serverSide: true,
